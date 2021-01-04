@@ -1,1 +1,1 @@
-# microsoft-teams
+# Quire for Microsoft Teams
