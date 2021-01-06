@@ -2,9 +2,7 @@
 // History: 2020/12/22 5:55 PM
 // Author: charlie<charliehsieh@potix.com>
 
-const { MessageFactory, CardFactory } = require("botbuilder");
-const { CardTemplates } = require("../model/cardtemplates");
-const { TeamsHttp } = require("../utils/teamsHttp");
+const { MessageFactory } = require("botbuilder");
 
 const notificationType = {
   AddTask: 0,
@@ -41,12 +39,15 @@ const notificationType = {
 
 async function handleQuireNotification(context, data) {
   switch (data.type) {
-    case notificationType.AddTask:
-      const task = await TeamsHttp.getTaskByOid(data.what.oid);
-      let taskCard = CardTemplates.addHeaderToCard(CardTemplates.taskCard(task), data.text);
-      taskCard = CardFactory.adaptiveCard(taskCard);
-      await context.sendActivity(MessageFactory.attachment(taskCard));
-      break;
+    /*
+     * can not get task info if don't have user token
+     */
+    // case notificationType.AddTask:
+    //   const task = await TeamsHttp.getTaskByOid(data.what.oid);
+    //   let taskCard = CardTemplates.addHeaderToCard(CardTemplates.taskCard(task), data.text);
+    //   taskCard = CardFactory.adaptiveCard(taskCard);
+    //   await context.sendActivity(MessageFactory.attachment(taskCard));
+    //   break;
     default:
       const msg = MessageFactory.text(data.message);
       await context.sendActivity(msg);

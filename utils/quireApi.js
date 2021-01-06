@@ -12,7 +12,7 @@ const quireUrl = process.env.QuireUrl;
 const tokenUrl = `${quireUrl}/oauth/token`;
 const apiUrl = `${quireUrl}/api`;
 
-class TeamsHttp {
+class QuireApi {
 
   static async getClientCredentialsToken() {
     return axios.post(tokenUrl, querystring.encode({
@@ -22,13 +22,30 @@ class TeamsHttp {
     })).then(res => res.data);
   }
 
-  static async refreshToken(oldToken) {
+  static async _refreshToken(oldToken) {
     return axios.post(tokenUrl, querystring.encode({
       grant_type: 'refresh_token',
       refresh_token: oldToken.refresh_token,
       client_id: clientId,
       client_secret: clientSecret
-    })).then(res => res.data);
+    })).then(res => res.data)
+    .catch(error => {
+      // if refresh failed, Quire will return 400
+      if (error.response.status === 400) {
+        return {isInvalidToken: true};
+      }
+      throw error;
+    });
+  }
+
+  static async refreshAndStoreToken(teamsId, oldToken) {
+    const newToken = await this._refreshToken(oldToken);
+    if (newToken.isInvalidToken) {
+      await this.deleteTokenFromStorage(teamsId);
+    } else {
+      await this.putTokenToStorage(teamsId, newToken);
+    }
+    return newToken;
   }
 
   // GET /user/list
@@ -131,19 +148,19 @@ class TeamsHttp {
 
   // PUT /storage/{name}
   static async putDataToStorage(name, data) {
-    return axios.put(`${apiUrl}/storage/${name}`, data, await clientAuthHeader())
+    return axios.put(`${apiUrl}/storage/${name}`, data, clientAuthHeader())
     .then(res => res.data);
   }
 
   // GET /storage/{name}
   static async getDataFromStorage(name) {
-    return axios.get(`${apiUrl}/storage/${name}`, await clientAuthHeader())
+    return axios.get(`${apiUrl}/storage/${name}`, clientAuthHeader())
     .then(res => res.data);
   }
 
   // DELETE /storage/{name}
   static async deleteDataFromStorage(name) {
-    return axios.delete(`${apiUrl}/storage/${name}`, await clientAuthHeader())
+    return axios.delete(`${apiUrl}/storage/${name}`, clientAuthHeader())
     .then(res => res.data);
   }
 
@@ -164,19 +181,19 @@ class TeamsHttp {
 
   // use `teams-l-` as prefix
   // only put oid and nameText to storage due to the 512 Bytes limitation
-  static async putLinkedProjectToStorage(teamsId, project) {
-    return this.putDataToStorage(`teams-l-${teamsId}`,
+  static async putLinkedProjectToStorage(id, project) {
+    return this.putDataToStorage(`teams-l-${id}`,
         { oid: project.oid, nameText: project.nameText });
   }
 
   // use `teams-l-` as prefix
-  static async getLinkedProjectFromStorage(teamsId) {
-    return this.getDataFromStorage(`teams-l-${teamsId}`);
+  static async getLinkedProjectFromStorage(id) {
+    return this.getDataFromStorage(`teams-l-${id}`);
   }
 
   // use `teams-l-` as prefix
-  static async deleteLinkedProjectFromStorage(teamsId) {
-    return this.deleteDataFromStorage(`teams-l-${teamsId}`);
+  static async deleteLinkedProjectFromStorage(id) {
+    return this.deleteDataFromStorage(`teams-l-${id}`);
   }
 
   static async handleAuthStart(req, res) {
@@ -219,11 +236,11 @@ class TeamsHttp {
   }
 }
 
-module.exports.TeamsHttp = TeamsHttp;
+module.exports.QuireApi = QuireApi;
 const { getClientToken } = require('./tokenManager');
 
-async function clientAuthHeader() {
-  const token = await getClientToken();
+function clientAuthHeader() {
+  const token = getClientToken();
   return authHeader(token);
 }
 

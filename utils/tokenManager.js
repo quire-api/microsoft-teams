@@ -2,38 +2,21 @@
 // History: 2020/12/22 5:55 PM
 // Author: charlie<charliehsieh@potix.com>
 
-const { isTokenExpired, addExpirationTimeForToken } = require("./utils");
-const { TeamsHttp } = require("./teamsHttp");
+const { QuireApi } = require("./quireApi");
 
 let clientToken = {};
 
 async function initClientToken() {
-  const token = await TeamsHttp.getClientCredentialsToken();
-  addExpirationTimeForToken(token);
+  const token = await QuireApi.getClientCredentialsToken();
   clientToken = token;
 }
 
-async function getClientToken() {
-  if (isTokenExpired(clientToken)) {
-    await refreshClientToken();
-  }
+function getClientToken() {
   return clientToken;
 }
 
-async function refreshClientToken() {
-  const newToken = await TeamsHttp.refreshToken(clientToken);
-  addExpirationTimeForToken(clientToken);
-  clientToken = newToken;
-}
-
 async function getUserToken(teamsId) {
-  let userToken = await TeamsHttp.getTokenFromStorage(teamsId);
-  if (isTokenExpired(userToken)) {
-    userToken = await TeamsHttp.refreshToken(userToken);
-    addExpirationTimeForToken(userToken);
-    await TeamsHttp.putTokenToStorage(teamsId, userToken);
-  }
-  return userToken;
+  return await QuireApi.getTokenFromStorage(teamsId);
 }
 
 async function isUserLogin(teamsId) {

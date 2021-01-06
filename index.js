@@ -10,7 +10,7 @@ const { BotFrameworkAdapter } = require('botbuilder');
 const { MicrosoftAppCredentials } = require('botframework-connector');
 const { BotActivityHandler } = require('./bot/botActivityHandler');
 const quireNotificationHandler = require('./bot/quireNotificationHandler');
-const { TeamsHttp } = require('./utils/teamsHttp');
+const { QuireApi } = require('./utils/quireApi');
 const { initClientToken } = require('./utils/tokenManager');
 
 // Create adapter.
@@ -22,8 +22,14 @@ const adapter = new BotFrameworkAdapter({
 adapter.onTurnError = async (context, error) => {
   console.error(`\n [onTurnError] unhandled error: ${error}`);
 
-  if (error.config)
+  if (error.isAxiosError) {
     console.log(error.config);
+    const statusCode = error.response.status;
+    if (statusCode === 429 || statusCode === 503) {
+      await context.sendActivity('Service is unavailable, please try again later');
+      return;
+    }
+  }
 
   await context.sendActivity('Internal error');
 };
@@ -68,7 +74,7 @@ server.post('/webhook*', async (req, res) => {
         console.log(error.body);
         res.sendStatus(403);
       } else {
-        console.log(error);
+        console.log(error.config);
         res.sendStatus(200);
       }
     }
@@ -76,8 +82,8 @@ server.post('/webhook*', async (req, res) => {
 });
 
 // Handle login
-server.get('/bot-auth-start', (req, res) => TeamsHttp.handleAuthStart(req, res));
-server.get('/bot-auth-end', (req, res) => TeamsHttp.handleAuthEnd(req, res));
+server.get('/bot-auth-start', (req, res) => QuireApi.handleAuthStart(req, res));
+server.get('/bot-auth-end', (req, res) => QuireApi.handleAuthEnd(req, res));
 
 // heartbeat
 server.get('/heartbeat', (req, res) => res.sendStatus(200));

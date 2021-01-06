@@ -222,25 +222,6 @@ class CardTemplates {
                   id: 'dueDate_input'
                 }
               ]
-            },
-            {
-              type: 'Column',
-              width: 'stretch',
-              items: [
-                {
-                  type: 'TextBlock',
-                  text: 'text block'
-                },
-                {
-                  type: 'ActionSet',
-                  actions: [
-                    {
-                      type: 'Action.Submit',
-                      title: 'Clear'
-                    }
-                  ]
-                }
-              ]
             }
           ]
         },
