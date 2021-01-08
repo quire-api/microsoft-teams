@@ -3,7 +3,7 @@
 // Author: charlie<charliehsieh@potix.com>
 
 const sqlite3 = require('sqlite3');
-const db = new sqlite3.Database('storage.db');
+const db = new sqlite3.Database(process.env.dbPath);
 
 const tokenDuration = 180 * 24 * 60 * 60 * 1000; // 6 months
 const clearInterval = 24 * 60 * 60 * 1000; // 24 hours
