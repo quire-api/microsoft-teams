@@ -11,7 +11,6 @@ const { MicrosoftAppCredentials } = require('botframework-connector');
 const { BotActivityHandler } = require('./bot/botActivityHandler');
 const quireNotificationHandler = require('./bot/quireNotificationHandler');
 const { QuireApi } = require('./utils/quireApi');
-const { initClientToken } = require('./utils/tokenManager');
 
 // Create adapter.
 const adapter = new BotFrameworkAdapter({
@@ -87,6 +86,3 @@ server.get('/bot-auth-end', (req, res) => QuireApi.handleAuthEnd(req, res));
 
 // heartbeat
 server.get('/heartbeat', (req, res) => res.sendStatus(200));
-
-// init this app's token
-initClientToken();

@@ -2,18 +2,8 @@
 // History: 2020/12/22 5:55 PM
 // Author: charlie<charliehsieh@potix.com>
 
-// export module at first to avoid node circular dependency problem
-module.exports = {
-  addExpirationTimeForToken: addExpirationTimeForToken,
-  getUserTokenByVerificationCode: getUserTokenByVerificationCode,
-  getConversationId: getConversationId,
-  isTokenExpired: isTokenExpired,
-  prepareVerificationCode: prepareVerificationCode,
-  toChoices: toChoices
-}
-
+const dbAccess = require('../db/dbAccess');
 const randomNumber = require("random-number-csprng");
-
 const verificationCodeLength = 8;
 const verificationCodeSurviveDuration = 60 * 1000; // 1 minute
 const unsafeUserTokens = {};
@@ -47,6 +37,11 @@ function isTokenExpired(token) {
   return token.expirationTime < new Date();
 }
 
+async function isUserLogin(teamsId) {
+  const token = await dbAccess.getToken(teamsId);
+  return token ? true : false;
+}
+
 function getConversationId(activity) {
   const channelData = activity.channelData;
   const channel = channelData ? channelData.channel : null;
@@ -60,7 +55,7 @@ function getConversationId(activity) {
   return idx == -1 ? conversationId : conversationId.substr(0, idx);
 }
 
-function toChoices(array) {
+function itemsToChoices(array) {
   return array.map(elem => {
     return {
       title: elem.nameText,
@@ -74,4 +69,45 @@ function toChoices(array) {
     if (curr.title < next.title) return -1;
     return 0;
   });
+}
+
+function projectsToChoices(array) {
+  let inbox;
+  return array.map(elem => {
+    if (elem.oid.substr(1) === elem.createdBy.oid) {
+      elem.nameText = 'My tasks';
+      inbox = elem;
+    }
+
+    return {
+      oid: elem.oid,
+      nameText: elem.nameText
+    };
+  }).sort((curr, next) => {
+    if (curr.oid === inbox.oid) return -1;
+    if (next.oid === inbox.oid) return 1;
+
+    if (curr.nameText > next.nameText) return 1;
+    if (curr.nameText < next.nameText) return -1;
+    return 0;
+  }).map(elem => {
+    return {
+      title: elem.nameText,
+      value: JSON.stringify({
+        oid: elem.oid,
+        nameText: elem.nameText
+      })
+    };
+  });
+}
+
+module.exports = {
+  addExpirationTimeForToken: addExpirationTimeForToken,
+  getUserTokenByVerificationCode: getUserTokenByVerificationCode,
+  getConversationId: getConversationId,
+  isTokenExpired: isTokenExpired,
+  isUserLogin: isUserLogin,
+  prepareVerificationCode: prepareVerificationCode,
+  itemsToChoices: itemsToChoices,
+  projectsToChoices: projectsToChoices
 }

@@ -3,6 +3,7 @@
 // Author: charlie<charliehsieh@potix.com>
 
 const axios = require('axios');
+const dbAccess = require('../db/dbAccess');
 const querystring = require('querystring');
 const utils = require('./utils');
 const clientId = process.env.QuireAppId;
@@ -41,9 +42,9 @@ class QuireApi {
   static async refreshAndStoreToken(teamsId, oldToken) {
     const newToken = await this._refreshToken(oldToken);
     if (newToken.isInvalidToken) {
-      await this.deleteTokenFromStorage(teamsId);
+      dbAccess.deleteToken(teamsId);
     } else {
-      await this.putTokenToStorage(teamsId, newToken);
+      dbAccess.putToken(teamsId, newToken);
     }
     return newToken;
   }
@@ -146,56 +147,6 @@ class QuireApi {
     .then(res => res.data);
   }
 
-  // PUT /storage/{name}
-  static async putDataToStorage(name, data) {
-    return axios.put(`${apiUrl}/storage/${name}`, data, clientAuthHeader())
-    .then(res => res.data);
-  }
-
-  // GET /storage/{name}
-  static async getDataFromStorage(name) {
-    return axios.get(`${apiUrl}/storage/${name}`, clientAuthHeader())
-    .then(res => res.data);
-  }
-
-  // DELETE /storage/{name}
-  static async deleteDataFromStorage(name) {
-    return axios.delete(`${apiUrl}/storage/${name}`, clientAuthHeader())
-    .then(res => res.data);
-  }
-
-  // use `teams-t-` as prefix
-  static async putTokenToStorage(teamsId, token) {
-    return this.putDataToStorage(`teams-t-${teamsId}`, token);
-  }
-
-  // use `teams-t-` as prefix
-  static async getTokenFromStorage(teamsId) {
-    return this.getDataFromStorage(`teams-t-${teamsId}`);
-  }
-
-  // use `teams-t-` as prefix
-  static async deleteTokenFromStorage(teamsId) {
-    return this.deleteDataFromStorage(`teams-t-${teamsId}`);
-  }b
-
-  // use `teams-l-` as prefix
-  // only put oid and nameText to storage due to the 512 Bytes limitation
-  static async putLinkedProjectToStorage(id, project) {
-    return this.putDataToStorage(`teams-l-${id}`,
-        { oid: project.oid, nameText: project.nameText });
-  }
-
-  // use `teams-l-` as prefix
-  static async getLinkedProjectFromStorage(id) {
-    return this.getDataFromStorage(`teams-l-${id}`);
-  }
-
-  // use `teams-l-` as prefix
-  static async deleteLinkedProjectFromStorage(id) {
-    return this.deleteDataFromStorage(`teams-l-${id}`);
-  }
-
   static async handleAuthStart(req, res) {
     const redirectUri = encodeURIComponent(`https://${domainName}/bot-auth-end`);
     const encodedId = encodeURIComponent(clientId);
@@ -236,15 +187,9 @@ class QuireApi {
   }
 }
 
-module.exports.QuireApi = QuireApi;
-const { getClientToken } = require('./tokenManager');
-
-function clientAuthHeader() {
-  const token = getClientToken();
-  return authHeader(token);
-}
-
 function authHeader(token) {
   const header = { headers: { 'Authorization': `Bearer ${token.access_token}` } };
   return header;
 }
+
+module.exports.QuireApi = QuireApi;

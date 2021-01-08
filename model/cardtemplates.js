@@ -4,10 +4,6 @@
 
 const { CardFactory } = require("botbuilder");
 const utils = require("../utils/utils");
-const myTasks = {
-  title: 'My tasks',
-  value: '{"oid":"-","nameText":"My tasks"}'
-}
 const taskDescriptionLimit = 4000;
 
 class CardTemplates {
@@ -205,7 +201,7 @@ class CardTemplates {
                   type: 'Input.ChoiceSet',
                   id: 'assignee',
                   placeholder: 'Select assignee',
-                  choices: utils.toChoices(users)
+                  choices: utils.itemsToChoices(users)
                 }
               ]
             },
@@ -262,7 +258,7 @@ class CardTemplates {
           type: 'Input.ChoiceSet',
           id: 'changeProject_input',
           value: JSON.stringify({ oid:originProject.oid, nameText: originProject.nameText }),
-          choices: [myTasks, ...utils.toChoices(projects)]
+          choices: utils.projectsToChoices(projects)
         }
       ],
       actions: [{
@@ -437,6 +433,7 @@ class CardTemplates {
   }
 
   static linkProjectCard(originProject, projects) {
+    const project = originProject || {};
     return {
       type: 'AdaptiveCard',
       $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
@@ -450,8 +447,8 @@ class CardTemplates {
         {
           type: 'Input.ChoiceSet',
           id: 'linkProject_input',
-          value: JSON.stringify({ oid:originProject.oid, nameText: originProject.nameText }),
-          choices: [myTasks, ...utils.toChoices(projects)]
+          value: JSON.stringify({ oid:project.oid, nameText: project.nameText }),
+          choices: utils.projectsToChoices(projects)
         }
       ],
       actions: [
@@ -505,7 +502,7 @@ class CardTemplates {
         {
           type: 'Input.ChoiceSet',
           id: 'followProject_input',
-          choices: utils.toChoices(projects),
+          choices: utils.projectsToChoices(projects),
           placeholder: 'Select a project'
         }
       ],
@@ -656,7 +653,7 @@ class CardTemplates {
       body: [
         {
           type: 'TextBlock',
-          text: `${task.nameText} has been completed`,
+          text: `${task.nameText} has been completed.`,
           wrap: true
         }
       ],
