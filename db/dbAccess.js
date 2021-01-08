@@ -1,3 +1,7 @@
+// Copyright (C) 2021 Potix Corporation. All Rights Reserved
+// History: 2021/1/8 12:03 PM
+// Author: charlie<charliehsieh@potix.com>
+
 const sqlite3 = require('sqlite3');
 const db = new sqlite3.Database('storage.db');
 
