@@ -1,7 +1,7 @@
 const sqlite3 = require('sqlite3');
-const db = new sqlite3.Database('storage.db');
+const db = new sqlite3.Database(process.env.DBPath);
  
-db.serialize(function() {
+db.serialize(() => {
   db.run(`DROP TABLE token`, () => {});
   db.run(`DROP TABLE linkedProject`, () => {});
 
