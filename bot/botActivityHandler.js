@@ -96,10 +96,6 @@ class BotActivityHandler extends TeamsActivityHandler {
           break;
         default:
           if (context.activity.attachments) break; // ignore msg if with attachments
-          if (context.activity.value) {
-            await this.handelSubmitFromMessage(context);
-            break;
-          }
           const unknownCommandCard = CardFactory.adaptiveCard(CardTemplates.unknownCommandCard());
           await context.sendActivity(MessageFactory.attachment(unknownCommandCard));
 
@@ -135,6 +131,8 @@ class BotActivityHandler extends TeamsActivityHandler {
   }
 
   async handleTeamsMessagingExtensionCardButtonClicked(context, cardData) {
+    if (!context.activity.conversation.conversationType) return;
+
     const actionId = cardData.actionId;
     const teamsId = context.activity.from.id;
     const userToken = await dbAccess.getToken(teamsId);
@@ -149,16 +147,12 @@ class BotActivityHandler extends TeamsActivityHandler {
         const conversationId = utils.getConversationId(context.activity);
         const serviceUrl = context.activity.serviceUrl;
         await QuireApi.addFollowerToTask(userToken, cardData.taskOid, conversationId, serviceUrl);
-        await context.sendActivity(`Is following ${cardData.taskName} now`);
-      break;
+        await context.sendActivity(`You have successfully followed ${cardData.taskName}`);
+        break;
       default:
         console.log(actionId);
         await context.sendActivity('error: submit from message extension card not handled');
     }
-  }
-
-  async handelSubmitFromMessage(context) {
-    await this.handleTeamsMessagingExtensionCardButtonClicked(context, context.activity.value);
   }
 
   async handleTeamsSigninVerifyState(context, query) {
@@ -191,7 +185,7 @@ class BotActivityHandler extends TeamsActivityHandler {
         const token = await QuireApi.refreshAndStoreToken(teamsId, userToken);
         if (!token.isInvalidToken) {
           data.token = token;
-          return this.handleTeamsTaskModuleFetch(context, taskModuleRequest);
+          return await this.handleTeamsTaskModuleFetch(context, taskModuleRequest);
         }
       }
 
@@ -257,9 +251,53 @@ class BotActivityHandler extends TeamsActivityHandler {
   }
 
   async handleTeamsTaskModuleSubmit(context, taskModuleRequest) {
-    const teamsId = context.activity.from.id;
-    const userToken = await dbAccess.getToken(teamsId);
     const data = taskModuleRequest.data;
+    const teamsId = context.activity.from.id;
+    let userToken;
+    try {
+      userToken = data.token || await dbAccess.getToken(teamsId);
+      return await this.handleSubmit(context, data, userToken);
+    } catch (error) {
+      if (!(error.isAxiosError && error.response.status === 401))
+        throw error;
+
+      const token = await QuireApi.refreshAndStoreToken(teamsId, userToken);
+      if (token.isInvalidToken) {
+        let message;
+        switch (data.actionId) {
+          case 'changeProject_submit':
+            message = 'changing project';
+            break;
+          case 'setProject_submit':
+            message = 'setting project';
+            break;
+          case 'addTask_submit':
+            message = 'adding a task';
+            break;
+          case 'addComment_submit':
+            message = 'adding a comment';
+            break;
+          case 'linkProject_submit':
+            message = 'linking a project';
+            break;
+          case 'followProject_submit':
+            message = 'following a project';
+            break;
+          case 'followTask_submit':
+            message = 'following a task';
+            break;
+        }
+        const needToLoginCard = CardFactory.adaptiveCard(CardTemplates.needToLoginCard(message));
+        await context.sendActivity(MessageFactory.attachment(needToLoginCard));
+        return;
+      }
+
+      taskModuleRequest.token = token;
+      return await this.handleTeamsTaskModuleSubmit(context, taskModuleRequest);
+    }
+  }
+
+  async handleSubmit(context, data, userToken) {
     const actionId = data.actionId;
 
     switch (actionId) {
@@ -410,7 +448,33 @@ class BotActivityHandler extends TeamsActivityHandler {
   }
 
   async handleTeamsMessagingExtensionSubmitAction(context, action) {
-    return await this.handleTeamsTaskModuleSubmit(context, action);
+    const teamsId = context.activity.from.id;
+    const userToken = action.token || await dbAccess.getToken(teamsId);
+    const data = action.data;
+    try {
+      return await this.handleSubmit(context, data, userToken);
+    } catch (error) {
+      if (!(error.isAxiosError && error.response.status === 401))
+        throw error;
+
+      const token = await QuireApi.refreshAndStoreToken(teamsId, userToken);
+      if (token.isInvalidToken)
+       return {
+        composeExtension: {
+          type: 'auth',
+          suggestedActions: {
+            actions: [{
+              type: 'openUrl',
+              value: `https://${domainName}/bot-auth-start`,
+              title: 'Log in to Quire'
+            }]
+          }
+        }
+      };
+
+      action.token = token;
+      return await this.handleTeamsMessagingExtensionSubmitAction(context, action);
+    }
   }
 
   async handleTeamsMessagingExtensionQuery(context, query) {

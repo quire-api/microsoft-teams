@@ -649,7 +649,7 @@ class CardTemplates {
     return {
       type: 'AdaptiveCard',
       $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
-      version: '1.3',
+      version: '1.2',
       body: [
         {
           type: 'TextBlock',
