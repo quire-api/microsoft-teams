@@ -285,10 +285,13 @@ class CardTemplates {
     return card;
   }
 
-  static taskCard(task, projectName) {
+  static taskCard(task, projectName, conversationType) {
     let descriptionText = task.descriptionText;
     if (descriptionText.length > taskDescriptionLimit)
       descriptionText = descriptionText.substr(0, taskDescriptionLimit) + '...';
+
+    if (task.nameText.length == 0)
+      task.nameText = '(empty)';
 
     return {
       type: 'AdaptiveCard',
@@ -347,23 +350,29 @@ class CardTemplates {
           title: 'Complete task',
           data: {
             actionId: 'taskComplete_submit',
+            fetchId: 'taskComplete_submit',
             taskOid: task.oid,
-            taskName: task.nameText
+            taskName: task.nameText,
+            msteams: conversationType === 'personal' ?
+                null : { type: 'task/fetch' }
           }
         }
       ]
     };
   }
 
-  static taskCardWithFollowBtn(task, projectName) {
-    const taskCard = this.taskCard(task, projectName);
+  static taskCardWithFollowBtn(task, projectName, conversationType) {
+    const taskCard = this.taskCard(task, projectName, conversationType);
     taskCard.actions.push({
       type: 'Action.Submit',
           title: 'Follow task',
           data: {
             actionId: 'followTask_submit',
+            fetchId: 'followTask_submit',
             taskOid: task.oid,
-            taskName: task.nameText
+            taskName: task.nameText,
+            msteams: conversationType === 'personal' ?
+                null : { type: 'task/fetch' }
           }
     });
     return taskCard;

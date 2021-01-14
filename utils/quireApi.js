@@ -117,8 +117,18 @@ class QuireApi {
 
   // GET /task/list/{oid}
   static async getRootTasksByOid(token, oid) {
-    return axios(`${apiUrl}/task/list/${oid}`, authHeader(token))
-    .then(res => res.data);
+    const promise = axios(`${apiUrl}/task/list/${oid}`, authHeader(token))
+        .then(res => res.data);
+    const timeout = new Promise((resolve, reject) => {
+      setTimeout(() => {
+        reject({ timeout: true });
+      }, 4500);
+    });
+
+    return Promise.race([
+      promise,
+      timeout
+    ]);
   }
 
   // PUT /project/{oid}

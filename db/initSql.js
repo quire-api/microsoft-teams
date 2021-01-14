@@ -1,3 +1,10 @@
+// Copyright (C) 2021 Potix Corporation. All Rights Reserved
+// History: 2021/1/14 11:03 AM
+// Author: charlie<charliehsieh@potix.com>
+
+const path = require('path');
+const ENV_FILE = path.join(__dirname, '../../boeneo/mis/configurations/config/msteams/env');
+require('dotenv').config({ path: ENV_FILE });
 const sqlite3 = require('sqlite3');
 const db = new sqlite3.Database(process.env.DBPath);
  
@@ -17,7 +24,7 @@ db.serialize(() => {
     oid TEXT NOT NULL,
     nameText TEXT NOT NULL,
     lastAccessTime INTEGER NOT NULL
-  )`)
+  )`);
 });
  
 db.close();
