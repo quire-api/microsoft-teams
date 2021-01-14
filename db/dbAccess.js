@@ -95,11 +95,16 @@ function deleteLinkedProject(id) {
   db.run(`DELETE FROM linkedProject WHERE id = ?`, id);
 }
 
+function shutdown() {
+  db.close();
+}
+
 module.exports = {
   putToken: putToken,
   getToken: getToken,
   deleteToken: deleteToken,
   putLinkedProject: putLinkedProject,
   getLinkedProject: getLinkedProject,
-  deleteLinkedProject: deleteLinkedProject
+  deleteLinkedProject: deleteLinkedProject,
+  shutdown: shutdown
 }

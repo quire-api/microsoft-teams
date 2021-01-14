@@ -172,29 +172,33 @@ class QuireApi {
   }
 
   static async handleAuthEnd(req, res) {
-    const code = req.query.code;
-    const postRes = await axios.post(tokenUrl, querystring.encode({
-      grant_type: 'authorization_code',
-      code: code,
-      client_id: clientId,
-      client_secret: clientSecret
-    }));
+    try {
+      const code = req.query.code;
+      const postRes = await axios.post(tokenUrl, querystring.encode({
+        grant_type: 'authorization_code',
+        code: code,
+        client_id: clientId,
+        client_secret: clientSecret
+      }));
 
-    let resBody = '<html><head><title>Quire for Teams Authentication</title></head>';
-    resBody += '<body>';
-    resBody += '<script src="https://statics.teams.cdn.office.net/sdk/v1.6.0/js/MicrosoftTeams.min.js" integrity="sha384-mhp2E+BLMiZLe7rDIzj19WjgXJeI32NkPvrvvZBrMi5IvWup/1NUfS5xuYN5S3VT" crossorigin="anonymous"></script>';
-    resBody += '<script type="text/javascript">';
-    resBody += 'microsoftTeams.initialize();';
+      let resBody = '<html><head><title>Quire for Teams Authentication</title></head>';
+      resBody += '<body>';
+      resBody += '<script src="https://statics.teams.cdn.office.net/sdk/v1.6.0/js/MicrosoftTeams.min.js" integrity="sha384-mhp2E+BLMiZLe7rDIzj19WjgXJeI32NkPvrvvZBrMi5IvWup/1NUfS5xuYN5S3VT" crossorigin="anonymous"></script>';
+      resBody += '<script type="text/javascript">';
+      resBody += 'microsoftTeams.initialize();';
 
-    if (postRes.status == 200) {
-      const verificationCode = await utils.prepareVerificationCode(postRes.data);
-      resBody += `microsoftTeams.authentication.notifySuccess('${verificationCode}');`;
-    } else {
-      resBody += 'microsoftTeams.authentication.notifyFailure();';
+      if (postRes.status == 200) {
+        const verificationCode = await utils.prepareVerificationCode(postRes.data);
+        resBody += `microsoftTeams.authentication.notifySuccess('${verificationCode}');`;
+      } else {
+        resBody += 'microsoftTeams.authentication.notifyFailure();';
+      }
+
+      resBody += '</script></body></html>';
+      res.send(resBody);
+    } catch (e) {
+      console.log(e);
     }
-
-    resBody += '</script></body></html>';
-    res.send(resBody);
   }
 }
 

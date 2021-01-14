@@ -9,8 +9,9 @@ require('dotenv').config({ path: ENV_FILE });
 const { BotFrameworkAdapter } = require('botbuilder');
 const { MicrosoftAppCredentials } = require('botframework-connector');
 const { BotActivityHandler } = require('./bot/botActivityHandler');
-const quireNotificationHandler = require('./bot/quireNotificationHandler');
 const { QuireApi } = require('./utils/quireApi');
+const quireNotificationHandler = require('./bot/quireNotificationHandler');
+const dbAccess = require('./db/dbAccess');
 
 // Create adapter.
 const adapter = new BotFrameworkAdapter({
@@ -37,15 +38,15 @@ adapter.onTurnError = async (context, error) => {
 const botActivityHandler = new BotActivityHandler();
 
 // Create HTTP server.
-const server = express();
+const app = express();
 const port = process.env.port || process.env.PORT || 3978;
-server.use(express.json());
-server.listen(port, () =>
+app.use(express.json());
+const server = app.listen(port, () =>
   console.log(`\Bot/ME service listening at https://localhost:${port}`)
 );
 
 // Listen for incoming requests.
-server.post('/api/messages', (req, res) => {
+app.post('/api/messages', (req, res) => {
   adapter.processActivity(req, res, async (context) => {
     // Process bot activity
     await botActivityHandler.run(context);
@@ -53,7 +54,7 @@ server.post('/api/messages', (req, res) => {
 });
 
 // Handle notifications
-server.post('/webhook*', async (req, res) => {
+app.post('/webhook*', async (req, res) => {
   const conversationId = req.path.substring(9);
   const serviceUrl = req.body.channel;
   const ref = {
@@ -81,8 +82,14 @@ server.post('/webhook*', async (req, res) => {
 });
 
 // Handle login
-server.get('/bot-auth-start', (req, res) => QuireApi.handleAuthStart(req, res));
-server.get('/bot-auth-end', (req, res) => QuireApi.handleAuthEnd(req, res));
+app.get('/bot-auth-start', (req, res) => QuireApi.handleAuthStart(req, res));
+app.get('/bot-auth-end', (req, res) => QuireApi.handleAuthEnd(req, res));
 
 // heartbeat
-server.get('/heartbeat', (req, res) => res.sendStatus(200));
+app.get('/heartbeat', (req, res) => res.sendStatus(200));
+
+// graceful shutdown
+process.on('SIGINT', () => {
+  dbAccess.shutdown();
+  server.close();
+});
