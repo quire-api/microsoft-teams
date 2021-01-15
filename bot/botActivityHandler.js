@@ -160,7 +160,10 @@ class BotActivityHandler extends TeamsActivityHandler {
     let userToken;
     try {
       userToken = data.token || await dbAccess.getToken(teamsId);
-      return await this.fetchHandler(context, data, userToken);
+      if (userToken)
+        return await this.fetchHandler(context, data, userToken);
+      else
+        return await this.sendPleaseLoginCard(context, data);
     } catch (error) {
       if (!(error.isAxiosError && error.response.status === 401))
         throw error;
@@ -175,23 +178,35 @@ class BotActivityHandler extends TeamsActivityHandler {
       }
 
       // refresh token failed, send 'Please login' message
-      let title, message;
-      if (data.fetchId === 'addTask_fetch') {
-        title = 'Add Task';
-        message = 'adding a new task';
-      } else if (data.fetchId === 'addComment_fetch') {
-        title = 'Add Comment';
-        message = 'adding a comment';
-      } else if (data.fetchId === 'linkProject_fetch') {
-        title = 'Link Project';
-        message = 'linking a project';
-      } else if (data.fetchId === 'followProject_fetch') {
-        title = 'Follow Project';
-        message = 'following a project';
-      }
+      this.sendPleaseLoginCard(context, data);
+    }
+  }
+
+  async sendPleaseLoginCard(context, data) {
+    let title, message;
+    if (data.fetchId === 'addTask_fetch') {
+      title = 'Add Task';
+      message = 'adding a new task';
+    } else if (data.fetchId === 'addComment_fetch') {
+      title = 'Add Comment';
+      message = 'adding a comment';
+    } else if (data.fetchId === 'linkProject_fetch') {
+      title = 'Link Project';
+      message = 'linking a project';
+    } else if (data.fetchId === 'followProject_fetch') {
+      title = 'Follow Project';
+      message = 'following a project';
+    } else if (data.fetchId === 'taskComplete_submit') {
+      title = 'Complete Task';
+      message = 'completing a task';
+    }
+    if (context.activity.conversation.conversationType === 'personal') {
       const loginCard = CardFactory.adaptiveCard(CardTemplates.needToLoginCard(message));
       await context.sendActivity(MessageFactory.attachment(loginCard));
-      return;
+    } else {
+      message = `Oops! You need to log into your Quire account before ${message}`
+      const card = CardFactory.adaptiveCard(CardTemplates.simpleMessageCard(message))
+      return createTaskInfo(title, card);
     }
   }
 
@@ -275,6 +290,9 @@ class BotActivityHandler extends TeamsActivityHandler {
             break;
           case 'addComment_submit':
             message = 'adding a comment';
+            break;
+          case 'taskComplete_submit':
+            message = 'completing a task';
             break;
           case 'linkProject_submit':
             message = 'linking a project';
@@ -385,7 +403,7 @@ class BotActivityHandler extends TeamsActivityHandler {
           }
         };
       default:
-        if (taskModuleRequest.data.fetchId === 'linkProject_fetch') {
+        if (data.fetchId === 'linkProject_fetch') {
           const conversationId = utils.getConversationId(context.activity);
           const linkedProject = await dbAccess.getLinkedProject(conversationId);
           const allProjects = await QuireApi.getAllProjects(userToken);
@@ -587,16 +605,6 @@ function createTaskInfo(title, adaptiveCard, height, width) {
       }
     }
   };
-}
-
-async function sendMessageOrErrorDialog(context, successMessage, errorTitle, errorMessage) {
-  try {
-    await context.sendActivity(successMessage);
-  } catch (error) {
-    console.log(error);
-    const card = CardFactory.adaptiveCard(CardTemplates.simpleMessageCard(errorMessage));
-    return createTaskInfo(errorTitle, card);
-  }
 }
 
 module.exports.BotActivityHandler = BotActivityHandler;
