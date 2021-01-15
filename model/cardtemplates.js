@@ -8,7 +8,7 @@ const taskDescriptionLimit = 4000;
 
 class CardTemplates {
   static welcomeCard() {
-    return {
+    return CardFactory.adaptiveCard({
       type: 'AdaptiveCard',
       $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
       version: '1.2',
@@ -36,11 +36,11 @@ class CardTemplates {
           url: 'https://quire.io/signup/'
         }
       ]
-    };
+    });
   }
 
   static loginSuccessCard() {
-    return {
+    return CardFactory.adaptiveCard({
       type: 'AdaptiveCard',
       $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
       version: '1.3',
@@ -71,11 +71,11 @@ class CardTemplates {
           }
         }
       ]
-    };
+    });
   }
 
   static needToLoginCard(text) {
-    return {
+    return CardFactory.adaptiveCard({
       type: 'AdaptiveCard',
       $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
       version: '1.2',
@@ -103,11 +103,11 @@ class CardTemplates {
           url: 'https://quire.io/signup/'
         }
       ]
-    };
+    });
   }
 
   static addTaskButton() {
-    return {
+    return CardFactory.adaptiveCard({
       type: 'AdaptiveCard',
       $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
       version: '1.2',
@@ -130,11 +130,11 @@ class CardTemplates {
           }
         }
       ]
-    }
+    });
   }
 
   static addTaskCard(project, users) {
-    return {
+    return CardFactory.adaptiveCard({
       type: 'AdaptiveCard',
       $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
       version: '1.2',
@@ -240,11 +240,11 @@ class CardTemplates {
           data: { actionId: 'addTask_submit', project: project }
         }
       ]
-    };
+    });
   }
 
   static changeProjectCard(originProject, projects) {
-    return {
+    return CardFactory.adaptiveCard({
       type: 'AdaptiveCard',
       $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
       version: '1.2',
@@ -266,7 +266,7 @@ class CardTemplates {
         title: 'OK',
         data: { actionId: 'setProject_submit', originProject: originProject }
       }]
-    };
+    });
   }
 
   static addHeaderToCard(card, headerMessage) {
@@ -285,7 +285,7 @@ class CardTemplates {
     return card;
   }
 
-  static taskCard(task, projectName, conversationType) {
+  static _taskCard(task, projectName, conversationType) {
     let descriptionText = task.descriptionText;
     if (descriptionText.length > taskDescriptionLimit)
       descriptionText = descriptionText.substr(0, taskDescriptionLimit) + '...';
@@ -361,8 +361,12 @@ class CardTemplates {
     };
   }
 
+  static taskCard(task, projectName, conversationType) {
+    return CardFactory.adaptiveCard(this._taskCard(task, projectName, conversationType));
+  }
+
   static taskCardWithFollowBtn(task, projectName, conversationType) {
-    const taskCard = this.taskCard(task, projectName, conversationType);
+    const taskCard = this._taskCard(task, projectName, conversationType);
     taskCard.actions.push({
       type: 'Action.Submit',
           title: 'Follow task',
@@ -375,11 +379,11 @@ class CardTemplates {
                 null : { type: 'task/fetch' }
           }
     });
-    return taskCard;
+    return CardFactory.adaptiveCard(taskCard);
   }
 
   static addCommentCard(taskName, taskOid) {
-    return {
+    return CardFactory.adaptiveCard({
       type: 'AdaptiveCard',
       $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
       version: '1.2',
@@ -403,11 +407,11 @@ class CardTemplates {
           data: { actionId: 'addComment_submit', taskOid: taskOid, taskName: taskName }
         }
       ]
-    };
+    });
   }
 
   static _linkProjectCard(message) {
-    return {
+    return CardFactory.adaptiveCard({
       type: 'AdaptiveCard',
       $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
       version: '1.2',
@@ -430,7 +434,7 @@ class CardTemplates {
           }
         }
       ]
-    }
+    });
   }
 
   static linkProjectButton() {
@@ -442,8 +446,14 @@ class CardTemplates {
   }
 
   static linkProjectCard(originProject, projects) {
-    const project = originProject || {};
-    return {
+    let project;
+    if (originProject)
+      project = originProject;
+    else
+      project = {};
+
+
+    return CardFactory.adaptiveCard({
       type: 'AdaptiveCard',
       $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
       version: '1.2',
@@ -456,7 +466,7 @@ class CardTemplates {
         {
           type: 'Input.ChoiceSet',
           id: 'linkProject_input',
-          value: JSON.stringify({ oid:project.oid, nameText: project.nameText }),
+          value: JSON.stringify({ oid: project.oid, nameText: project.nameText }),
           choices: utils.projectsToChoices(projects)
         }
       ],
@@ -467,11 +477,11 @@ class CardTemplates {
           data: { actionId: 'linkProject_submit' }
         }
       ]
-    }
+    });
   }
 
   static followProjectButton() {
-    return {
+    return CardFactory.adaptiveCard({
       type: 'AdaptiveCard',
       $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
       version: '1.2',
@@ -494,11 +504,11 @@ class CardTemplates {
           }
         }
       ]
-    }
+    });
   }
 
   static followProjectCard(projects) {
-    return {
+    return CardFactory.adaptiveCard({
       type: 'AdaptiveCard',
       $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
       version: '1.2',
@@ -522,11 +532,11 @@ class CardTemplates {
           data: { actionId: 'followProject_submit' }
         }
       ]
-    };
+    });
   }
 
   static signoutCard() {
-    return {
+    return CardFactory.adaptiveCard({
       type: 'AdaptiveCard',
       $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
       version: '1.2',
@@ -549,11 +559,11 @@ class CardTemplates {
           }
         }
       ]
-    };
+    });
   }
 
   static _loginCard(message) {
-    return {
+    return CardFactory.adaptiveCard({
       type: 'AdaptiveCard',
       $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
       version: '1.2',
@@ -576,7 +586,7 @@ class CardTemplates {
           }
         }
       ]
-    }
+    });
   }
 
   static loginButton() {
@@ -588,7 +598,7 @@ class CardTemplates {
   }
 
   static logoutMessageCard() {
-    return {
+    return CardFactory.adaptiveCard({
       type: 'AdaptiveCard',
       $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
       version: '1.2',
@@ -611,11 +621,11 @@ class CardTemplates {
           }
         }
       ]
-    };
+    });
   }
 
   static simpleMessageCard(message) {
-    return {
+    return CardFactory.adaptiveCard({
       type: 'AdaptiveCard',
       $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
       version: '1.2',
@@ -624,11 +634,11 @@ class CardTemplates {
           text: message,
           wrap: true
       }]
-    };
+    });
   }
 
   static unknownCommandCard() {
-    return {
+    return CardFactory.adaptiveCard({
       type: 'AdaptiveCard',
       $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
       version: '1.3',
@@ -651,11 +661,11 @@ class CardTemplates {
           }
         }
       ]
-    };
+    });
   }
 
   static taskCompleteCard(task) {
-    return {
+    return CardFactory.adaptiveCard({
       type: 'AdaptiveCard',
       $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
       version: '1.2',
@@ -673,11 +683,11 @@ class CardTemplates {
           url: task.url
         }
       ]
-    };
+    });
   }
 
   static helpCard() {
-    return {
+    return CardFactory.adaptiveCard({
       type: 'AdaptiveCard',
       $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
       version: '1.3',
@@ -724,7 +734,7 @@ class CardTemplates {
           url: 'https://quire.io/blog'
         }
       ]
-    };
+    });
   }
 }
 

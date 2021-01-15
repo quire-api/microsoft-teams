@@ -22,15 +22,18 @@ class BotActivityHandler extends TeamsActivityHandler {
       TurnContext.removeRecipientMention(context.activity);
       const command = new String(context.activity.text).trim().toLocaleLowerCase();
       const isLogin = await utils.isUserLogin(context.activity.from.id);
+      if (context.activity.value) {
+        return await this.handleTeamsTaskModuleSubmit(context, {data: context.activity.value});
+      }
 
       switch (command) {
         case 'add task':
         case 'create task': {
           let respondCard;
           if (isLogin)
-            respondCard = CardFactory.adaptiveCard(CardTemplates.addTaskButton());
+            respondCard = CardTemplates.addTaskButton();
           else
-            respondCard = CardFactory.adaptiveCard(CardTemplates.needToLoginCard('adding a new task'));
+            respondCard = CardTemplates.needToLoginCard('adding a new task');
 
           await context.sendActivity(MessageFactory.attachment(respondCard));
           break;
@@ -38,9 +41,9 @@ class BotActivityHandler extends TeamsActivityHandler {
         case 'link project': {
           let respondCard;
           if (isLogin)
-            respondCard = CardFactory.adaptiveCard(CardTemplates.linkProjectButton());
+            respondCard = CardTemplates.linkProjectButton();
           else
-            respondCard = CardFactory.adaptiveCard(CardTemplates.needToLoginCard('linking a project'));
+            respondCard = CardTemplates.needToLoginCard('linking a project');
 
           await context.sendActivity(MessageFactory.attachment(respondCard));
           break;
@@ -48,9 +51,9 @@ class BotActivityHandler extends TeamsActivityHandler {
         case 'follow project': {
           let respondCard;
           if (isLogin)
-            respondCard = CardFactory.adaptiveCard(CardTemplates.followProjectButton());
+            respondCard = CardTemplates.followProjectButton();
           else
-            respondCard = CardFactory.adaptiveCard(CardTemplates.needToLoginCard('following a project'));
+            respondCard = CardTemplates.needToLoginCard('following a project');
 
           await context.sendActivity(MessageFactory.attachment(respondCard));
           break;
@@ -66,7 +69,7 @@ class BotActivityHandler extends TeamsActivityHandler {
           if (isLogin) {
             returnMessage = MessageFactory.text('Hey, you’re already logged in.');
           } else {
-            const loginButton = CardFactory.adaptiveCard(CardTemplates.loginButton());
+            const loginButton = CardTemplates.loginButton();
             returnMessage = MessageFactory.attachment(loginButton);
           }
           context.adapter.createConversation(conversationRef, async context => {
@@ -80,23 +83,23 @@ class BotActivityHandler extends TeamsActivityHandler {
             await context.sendActivity(`Thanks ${context.activity.from.name}, I've sent you a direct message to help you do this. If you don't see the message, try adding the Asana app first`);
             const conversationRef = TurnContext.getConversationReference(context.activity);
             context.adapter.createConversation(conversationRef, async context => {
-              const signoutCard = CardFactory.adaptiveCard(CardTemplates.signoutCard());
+              const signoutCard = CardTemplates.signoutCard();
               await context.sendActivity(MessageFactory.attachment(signoutCard));
             });
           } else {
             await dbAccess.deleteToken(context.activity.from.id);
-            const logoutMessageCard = CardFactory.adaptiveCard(CardTemplates.logoutMessageCard());
+            const logoutMessageCard = CardTemplates.logoutMessageCard();
             await context.sendActivity(MessageFactory.attachment(logoutMessageCard));
           }
           break;
         }
         case 'help':
-          const helpCard = CardFactory.adaptiveCard(CardTemplates.helpCard());
+          const helpCard = CardTemplates.helpCard();
           await context.sendActivity(MessageFactory.attachment(helpCard));
           break;
         default:
           if (context.activity.attachments) break; // ignore msg if with attachments
-          const unknownCommandCard = CardFactory.adaptiveCard(CardTemplates.unknownCommandCard());
+          const unknownCommandCard = CardTemplates.unknownCommandCard();
           await context.sendActivity(MessageFactory.attachment(unknownCommandCard));
 
       }
@@ -107,7 +110,7 @@ class BotActivityHandler extends TeamsActivityHandler {
       const botId = context.activity.recipient.id;
       // if bot added, send proactive welcome message
       if (context.activity.membersAdded.find(elem => elem.id === botId)) {
-        const welcomeCard = CardFactory.adaptiveCard(CardTemplates.welcomeCard());
+        const welcomeCard = CardTemplates.welcomeCard();
         await context.sendActivity(MessageFactory.attachment(welcomeCard));
       }
       await next();
@@ -125,7 +128,7 @@ class BotActivityHandler extends TeamsActivityHandler {
     switch (actionId) {
       case 'taskComplete_submit':
         const result = await QuireApi.setTaskComplete(userToken, cardData.taskOid);
-        const taskCompleteCard = CardFactory.adaptiveCard(CardTemplates.taskCompleteCard(result));
+        const taskCompleteCard = CardTemplates.taskCompleteCard(result);
         await context.sendActivity(MessageFactory.attachment(taskCompleteCard));
         break;
       case 'followTask_submit':
@@ -147,7 +150,7 @@ class BotActivityHandler extends TeamsActivityHandler {
     if (token) {
       const teamsId = context.activity.from.id;
       dbAccess.putToken(teamsId, token);
-      const loginSuccessCard = CardFactory.adaptiveCard(CardTemplates.loginSuccessCard());
+      const loginSuccessCard = CardTemplates.loginSuccessCard();
       await context.sendActivity(MessageFactory.attachment(loginSuccessCard));
     } else {
       await context.sendActivity('Authentication failed!!!');
@@ -201,11 +204,11 @@ class BotActivityHandler extends TeamsActivityHandler {
       message = 'completing a task';
     }
     if (context.activity.conversation.conversationType === 'personal') {
-      const loginCard = CardFactory.adaptiveCard(CardTemplates.needToLoginCard(message));
+      const loginCard = CardTemplates.needToLoginCard(message);
       await context.sendActivity(MessageFactory.attachment(loginCard));
     } else {
       message = `Oops! You need to log into your Quire account before ${message}`
-      const card = CardFactory.adaptiveCard(CardTemplates.simpleMessageCard(message))
+      const card = CardTemplates.simpleMessageCard(message);
       return createTaskInfo(title, card);
     }
   }
@@ -216,7 +219,7 @@ class BotActivityHandler extends TeamsActivityHandler {
         const conversationId = utils.getConversationId(context.activity);
         const linkedProject = await dbAccess.getLinkedProject(conversationId);
         if (!linkedProject) {
-          const responseCard = CardFactory.adaptiveCard(CardTemplates.needToLinkProjectButton());
+          const responseCard = CardTemplates.needToLinkProjectButton();
           if (data.type) { // invoked by adaptive card, return a message
             await context.sendActivity(MessageFactory.attachment(responseCard));
             return;
@@ -226,36 +229,40 @@ class BotActivityHandler extends TeamsActivityHandler {
         }
 
         const users = await QuireApi.getUsersByProjectOid(userToken, linkedProject.oid);
-        const addTaskCard = CardFactory.adaptiveCard(CardTemplates.addTaskCard(linkedProject, users));
+        const addTaskCard = CardTemplates.addTaskCard(linkedProject, users);
         return createTaskInfo('Add Task', addTaskCard);
       }
       case 'addComment_fetch':
-        const addCommentCard = CardFactory.adaptiveCard(CardTemplates.addCommentCard(data.taskName, data.taskOid));
+        const addCommentCard = CardTemplates.addCommentCard(data.taskName, data.taskOid);
         return createTaskInfo('Add Comment', addCommentCard);
       case 'linkProject_fetch': {
         const conversationId = utils.getConversationId(context.activity);
         const linkedProject = await dbAccess.getLinkedProject(conversationId);
         const allProjects = await QuireApi.getAllProjects(userToken);
-        const linkProjectCard = CardFactory.adaptiveCard(CardTemplates.linkProjectCard(linkedProject, allProjects));
+        const linkProjectCard = CardTemplates.linkProjectCard(linkedProject, allProjects);
         return createTaskInfo('Link Project', linkProjectCard);
       }
       case 'followProject_fetch': {
         const allProjects = await QuireApi.getAllProjects(userToken);
-        const followProjectCard = CardFactory.adaptiveCard(CardTemplates.followProjectCard(allProjects));
+        const followProjectCard = CardTemplates.followProjectCard(allProjects);
         return createTaskInfo('Follow Project', followProjectCard);
       }
       case 'taskComplete_submit': {
         const result = await QuireApi.setTaskComplete(userToken, data.taskOid);
-        const messageCard = CardFactory.adaptiveCard(
-            CardTemplates.simpleMessageCard(`${result.nameText} has been completed.`));
+        const message = `${result.nameText} has been completed.`
+        if (context.activity.conversation.conversationType === 'personal') {
+          await context.sendActivity(message);
+          break;
+        }
+        const messageCard = CardTemplates.simpleMessageCard(message);
         return createTaskInfo('Complete Task', messageCard)
       }
       case 'followTask_submit': {
         const conversationId = utils.getConversationId(context.activity);
         const serviceUrl = context.activity.serviceUrl;
         await QuireApi.addFollowerToTask(userToken, data.taskOid, conversationId, serviceUrl);
-        const messageCard = CardFactory.adaptiveCard(
-            CardTemplates.simpleMessageCard(`You have successfully followed ${data.taskName}`));
+        const messageCard = 
+            CardTemplates.simpleMessageCard(`You have successfully followed ${data.taskName}`);
         return createTaskInfo('Follow Task', messageCard);
       }
       default:
@@ -304,7 +311,7 @@ class BotActivityHandler extends TeamsActivityHandler {
             message = 'following a task';
             break;
         }
-        const needToLoginCard = CardFactory.adaptiveCard(CardTemplates.needToLoginCard(message));
+        const needToLoginCard = CardTemplates.needToLoginCard(message);
         await context.sendActivity(MessageFactory.attachment(needToLoginCard));
         return;
       }
@@ -321,13 +328,13 @@ class BotActivityHandler extends TeamsActivityHandler {
       case 'changeProject_submit':
         const originProject = data.project;
         const projects = await QuireApi.getAllProjects(userToken);
-        const changeProjectCard = CardFactory.adaptiveCard(CardTemplates.changeProjectCard(originProject, projects));
+        const changeProjectCard = CardTemplates.changeProjectCard(originProject, projects);
         return createTaskInfo('Change Project', changeProjectCard);
       case 'setProject_submit':
         const selectedProject = JSON.parse(data.changeProject_input || data.originProject);
         const users = await QuireApi.getUsersByProjectOid(userToken, selectedProject.oid);
-        const newAddProjectCard = CardFactory.adaptiveCard(CardTemplates.addTaskCard(selectedProject, users));
-        return createTaskInfo('Add Task Adaptive Card', newAddProjectCard);
+        const newAddProjectCard = CardTemplates.addTaskCard(selectedProject, users);
+        return createTaskInfo('Add Task', newAddProjectCard);
       case 'addTask_submit':
         const oid = data.project.oid;
         const task = {
@@ -336,7 +343,7 @@ class BotActivityHandler extends TeamsActivityHandler {
           description: data.description_input
         };
         if (task.name.length == 0) {
-          const messageCard = CardFactory.adaptiveCard(CardTemplates.simpleMessageCard('Please input task name!'));
+          const messageCard = CardTemplates.simpleMessageCard('Please input task name!');
           return createTaskInfo('Add Task', messageCard);
         }
 
@@ -345,8 +352,8 @@ class BotActivityHandler extends TeamsActivityHandler {
         }
         const conversationType = context.activity.conversation.conversationType;
         const respond = await QuireApi.addTaskToProjectByOid(userToken, task, oid);
-        const taskCard = CardFactory.adaptiveCard(
-            CardTemplates.taskCard(respond, data.project.nameText, conversationType));
+        const taskCard = 
+            CardTemplates.taskCard(respond, data.project.nameText, conversationType);
 
         if (conversationType === 'personal') {
           await context.sendActivity('Your new task has been added to Quire.');
@@ -355,18 +362,32 @@ class BotActivityHandler extends TeamsActivityHandler {
         break;
       case 'addComment_submit':
         if (data.comment_input.length == 0) {
-          const messageCard = CardFactory.adaptiveCard(CardTemplates.simpleMessageCard('Please input comment!'));
+          const messageCard = CardTemplates.simpleMessageCard('Please input comment!');
           return createTaskInfo('Add Comment', messageCard);
         }
         QuireApi.addCommentToTaskByOid(userToken, data.comment_input, data.taskOid)
         await context.sendActivity(`Your comment has been added to ${data.taskName}`);
         break;
+      case 'taskComplete_submit': {
+        const result = await QuireApi.setTaskComplete(userToken, data.taskOid);
+        const message = `${result.nameText} has been completed.`
+        if (context.activity.conversation.conversationType === 'personal') {
+          await context.sendActivity(message);
+          break;
+        }
+        const messageCard = CardTemplates.simpleMessageCard(message);
+        return createTaskInfo('Complete Task', messageCard)
+      }
       case 'linkProject_submit': {
         const id = utils.getConversationId(context.activity);
         const project = JSON.parse(data.linkProject_input);
         dbAccess.putLinkedProject(id, project);
         const message = `You have successfully linked ${project.nameText} to this channel`;
-        const messageCard = CardFactory.adaptiveCard(CardTemplates.simpleMessageCard(message));
+        if (context.activity.conversation.conversationType === 'personal') {
+          await context.sendActivity(message);
+          break;
+        }
+        const messageCard = CardTemplates.simpleMessageCard(message);
         return createTaskInfo('Link Project', messageCard);
       }
       case 'followProject_submit': {
@@ -377,7 +398,11 @@ class BotActivityHandler extends TeamsActivityHandler {
         const project = JSON.parse(data.followProject_input);
         await QuireApi.addFollowerToProject(userToken, project.oid, conversationId, serviceUrl);
         const message = `You have successfully followed ${project.nameText}`;
-        const messageCard = CardFactory.adaptiveCard(CardTemplates.simpleMessageCard(message));
+        if (context.activity.conversation.conversationType === 'personal') {
+          await context.sendActivity(message);
+          break;
+        }
+        const messageCard = CardTemplates.simpleMessageCard(message);
         return createTaskInfo('Follow Project', messageCard);
       }
       case 'followTask_submit': {
@@ -394,7 +419,7 @@ class BotActivityHandler extends TeamsActivityHandler {
         break;
       }
       case 'redirectToSignin_submit':
-        const loginButton = CardFactory.adaptiveCard(CardTemplates.loginButton());
+        const loginButton = CardTemplates.loginButton();
         return {
           composeExtension: {
             type: 'result',
@@ -407,7 +432,7 @@ class BotActivityHandler extends TeamsActivityHandler {
           const conversationId = utils.getConversationId(context.activity);
           const linkedProject = await dbAccess.getLinkedProject(conversationId);
           const allProjects = await QuireApi.getAllProjects(userToken);
-          const linkProjectCard = CardFactory.adaptiveCard(CardTemplates.linkProjectCard(linkedProject, allProjects));
+          const linkProjectCard = CardTemplates.linkProjectCard(linkedProject, allProjects);
           return createTaskInfo('Link Project', linkProjectCard);
         }
         console.log(data);
@@ -558,8 +583,8 @@ class BotActivityHandler extends TeamsActivityHandler {
       const conversationType = context.activity.conversation.conversationType;
       for (const task of results) {
         if (task.status.value == 100) continue;
-        const adaptiveCard = CardFactory.adaptiveCard(
-            CardTemplates.taskCardWithFollowBtn(task, linkedProject.nameText, conversationType));
+        const adaptiveCard = 
+            CardTemplates.taskCardWithFollowBtn(task, linkedProject.nameText, conversationType);
         adaptiveCard.preview = CardFactory.thumbnailCard(task.nameText, task.description);
         attachments.push(adaptiveCard);
       }
@@ -576,7 +601,7 @@ class BotActivityHandler extends TeamsActivityHandler {
         return {
           composeExtension: {
             type: 'message',
-            text: 'Timeout.'
+            text: 'Sorry, your search session is timeout. Please try again.'
           }
         };
 

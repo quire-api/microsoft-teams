@@ -92,4 +92,5 @@ app.get('/heartbeat', (req, res) => res.sendStatus(200));
 process.on('SIGINT', () => {
   dbAccess.shutdown();
   server.close();
+  console.log(`\nServer shutdown...`);
 });

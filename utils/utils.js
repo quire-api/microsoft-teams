@@ -72,7 +72,7 @@ function itemsToChoices(array) {
 }
 
 function projectsToChoices(array) {
-  let inbox;
+  let inbox = {};
   return array.map(elem => {
     if (elem.oid.substr(1) === elem.createdBy.oid) {
       elem.nameText = 'My tasks';
