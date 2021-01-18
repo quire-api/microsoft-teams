@@ -482,15 +482,29 @@ class BotActivityHandler extends TeamsActivityHandler {
     try {
       return await this.fetchHandler(context, data, userToken);
     } catch (error) {
-      if (!(error.isAxiosError && error.response.status === 401))
-        throw error;
-
-      const token = await QuireApi.refreshAndStoreToken(teamsId, userToken);
-      if (token.isInvalidToken)
-        return loginAction;
-
-      action.token = token;
-      return await this.handleTeamsMessagingExtensionFetchTask(context, action);
+      if (error.isAxiosError) {
+        if (error.response.status === 401) {
+          const token = await QuireApi.refreshAndStoreToken(teamsId, userToken);
+          if (token.isInvalidToken)
+            return loginAction;
+  
+          action.token = token;
+          return await this.handleTeamsMessagingExtensionFetchTask(context, action);
+        } else {
+          const conversationId = utils.getConversationId(context.activity);
+          const linkedProject = await dbAccess.getLinkedProject(conversationId);
+          if (error.response.status == 403) {  
+            const messageCard = CardTemplates.simpleMessageCard(
+              `Sorry, you do not have permission to access project ${linkedProject.nameText}. Please contact Quire project admin.`);
+            return createTaskInfo('Add Task', messageCard);
+          } else if (error.response.status == 404) {
+            const messageCard = CardTemplates.simpleMessageCard(
+              `Project ${linkedProject.nameText}: not found.`);
+            return createTaskInfo('Add Task', messageCard);
+          }
+        }
+      }
+      throw error;
     }
   }
 
@@ -620,9 +634,9 @@ class BotActivityHandler extends TeamsActivityHandler {
           return {
             composeExtension: {
               type: 'message',
-              text: `You do not have permission to perform this action. Please contact your Admin.`
+              text: `Sorry, you do not have permission to access project ${linkedProject.nameText}. Please contact Quire project admin.`
             }
-          }
+          };
         // 404 The specified resource could not be found.
         } else if (error.response.status == 404) {
           return {
