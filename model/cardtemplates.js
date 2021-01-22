@@ -26,7 +26,7 @@ class CardTemplates {
           data: {
             msteams: {
               type: 'signin',
-              value: `https://${process.env.DomainName}/bot-auth-start`
+              value: `${process.env.DomainName}/bot-auth-start`
             }
           }
         },
@@ -93,7 +93,7 @@ class CardTemplates {
           data: {
             msteams: {
               type: 'signin',
-              value: `https://${process.env.DomainName}/bot-auth-start`
+              value: `${process.env.DomainName}/bot-auth-start`
             }
           }
         },
@@ -581,7 +581,7 @@ class CardTemplates {
           data: {
             msteams: {
               type: 'signin',
-              value: `https://${process.env.DomainName}/bot-auth-start`
+              value: `${process.env.DomainName}/bot-auth-start`
             }
           }
         }
@@ -616,7 +616,7 @@ class CardTemplates {
           data: {
             msteams: {
               type: 'signin',
-              value: `https://${process.env.DomainName}/bot-auth-start`
+              value: `${process.env.DomainName}/bot-auth-start`
             }
           }
         }

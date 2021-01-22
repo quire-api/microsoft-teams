@@ -468,7 +468,7 @@ class BotActivityHandler extends TeamsActivityHandler {
           actions: [
             {
               type: 'openUrl',
-              value: `https://${domainName}/bot-auth-start`,
+              value: `${domainName}/bot-auth-start`,
               title: 'Sign in to this app'
             }
           ]
@@ -526,7 +526,7 @@ class BotActivityHandler extends TeamsActivityHandler {
           suggestedActions: {
             actions: [{
               type: 'openUrl',
-              value: `https://${domainName}/bot-auth-start`,
+              value: `${domainName}/bot-auth-start`,
               title: 'Log in to Quire'
             }]
           }
@@ -565,7 +565,7 @@ class BotActivityHandler extends TeamsActivityHandler {
         suggestedActions: {
           actions: [{
             type: 'openUrl',
-            value: `https://${domainName}/bot-auth-start`,
+            value: `${domainName}/bot-auth-start`,
             title: 'Log in to Quire'
           }]
         }
