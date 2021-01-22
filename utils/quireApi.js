@@ -16,14 +16,6 @@ const apiUrl = `${quireAddress}/api`;
 
 class QuireApi {
 
-  static async getClientCredentialsToken() {
-    return axios.post(tokenUrl, querystring.encode({
-      grant_type: 'client_credentials',
-      client_id: clientId,
-      client_secret: clientSecret
-    })).then(res => res.data);
-  }
-
   static async _refreshToken(oldToken) {
     return axios.post(tokenUrl, querystring.encode({
       grant_type: 'refresh_token',
@@ -159,7 +151,7 @@ class QuireApi {
   }
 
   static async handleAuthStart(req, res) {
-    const redirectUri = encodeURIComponent(`https://${domainName}/bot-auth-end`);
+    const redirectUri = encodeURIComponent(`${domainName}/bot-auth-end`);
     const encodedId = encodeURIComponent(clientId);
     const url = `${quireUrl}/oauth?client_id=${encodedId}&redirect_uri=${redirectUri}`;
     let resBody = '<html><head><title>Sign In</title></head><body>';
