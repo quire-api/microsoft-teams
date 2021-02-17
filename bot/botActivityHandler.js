@@ -62,7 +62,7 @@ class BotActivityHandler extends TeamsActivityHandler {
           const conversationType = context.activity.conversation.conversationType;
           const conversationRef = TurnContext.getConversationReference(context.activity);
           if (conversationType === 'groupChat' || conversationType === 'channel') {
-            await context.sendActivity(`Thanks ${context.activity.from.name}, I've sent you a direct message to help you do this. If you don't see the message, try adding the Asana app first`);
+            await context.sendActivity(`Thanks ${context.activity.from.name}, I've sent you a direct message to help you do this. If you don't see the message, try adding the Quire app first`);
           }
 
           let returnMessage;
@@ -80,7 +80,7 @@ class BotActivityHandler extends TeamsActivityHandler {
         case 'logout': {
           const conversationType = context.activity.conversation.conversationType;
           if (conversationType === 'groupChat' || conversationType === 'channel') {
-            await context.sendActivity(`Thanks ${context.activity.from.name}, I've sent you a direct message to help you do this. If you don't see the message, try adding the Asana app first`);
+            await context.sendActivity(`Thanks ${context.activity.from.name}, I've sent you a direct message to help you do this. If you don't see the message, try adding the Quire app first`);
             const conversationRef = TurnContext.getConversationReference(context.activity);
             context.adapter.createConversation(conversationRef, async context => {
               const signoutCard = CardTemplates.signoutCard();
