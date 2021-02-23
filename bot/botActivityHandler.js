@@ -248,14 +248,16 @@ class BotActivityHandler extends TeamsActivityHandler {
         return createTaskInfo('Follow Project', followProjectCard);
       }
       case 'taskComplete_submit': {
-        const result = await QuireApi.setTaskComplete(userToken, data.taskOid);
-        const message = `${result.nameText} has been completed.`
-        if (context.activity.conversation.conversationType === 'personal') {
-          await context.sendActivity(message);
-          break;
+        const task = await QuireApi.getTaskByOid(userToken, data.taskOid);
+        var message;
+        if (!task) {
+          message = 'Task not found.';
+        } else {
+          const result = await QuireApi.setTaskComplete(userToken, data.taskOid);
+          message = `${result.nameText} has been completed.`
         }
-        const messageCard = CardTemplates.simpleMessageCard(message);
-        return createTaskInfo('Complete Task', messageCard)
+        await context.sendActivity(message);
+        break;
       }
       case 'followTask_submit': {
         const conversationId = utils.getConversationId(context.activity);
@@ -369,14 +371,17 @@ class BotActivityHandler extends TeamsActivityHandler {
         await context.sendActivity(`Your comment has been added to ${data.taskName}`);
         break;
       case 'taskComplete_submit': {
-        const result = await QuireApi.setTaskComplete(userToken, data.taskOid);
-        const message = `${result.nameText} has been completed.`
-        if (context.activity.conversation.conversationType === 'personal') {
-          await context.sendActivity(message);
-          break;
+        const task = await QuireApi.getTaskByOid(userToken, data.taskOid);
+        var message;
+        console.log(task);
+        if (!task) {
+          message = 'Task not found.';
+        } else {
+          const result = await QuireApi.setTaskComplete(userToken, data.taskOid);
+          message = `${result.nameText} has been completed.`
         }
-        const messageCard = CardTemplates.simpleMessageCard(message);
-        return createTaskInfo('Complete Task', messageCard)
+        await context.sendActivity(message);
+        break;
       }
       case 'linkProject_submit': {
         const id = utils.getConversationId(context.activity);
