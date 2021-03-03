@@ -362,18 +362,20 @@ class BotActivityHandler extends TeamsActivityHandler {
         }
         await context.sendActivity(MessageFactory.attachment(taskCard));
         break;
-      case 'addComment_submit':
+      case 'addComment_submit': {
         if (data.comment_input.length == 0) {
           const messageCard = CardTemplates.simpleMessageCard('Please input comment!');
           return createTaskInfo('Add Comment', messageCard);
         }
-        QuireApi.addCommentToTaskByOid(userToken, data.comment_input, data.taskOid)
-        await context.sendActivity(`Your comment has been added to ${data.taskName}`);
+        const task = await QuireApi.addCommentToTaskByOid(userToken, data.comment_input, data.taskOid);
+        const commentCard = CardTemplates.commentCard(context.activity.from.name, task.owner.name, task.description, task.url);
+        
+        await context.sendActivity(MessageFactory.attachment(commentCard));
         break;
+      }
       case 'taskComplete_submit': {
         const task = await QuireApi.getTaskByOid(userToken, data.taskOid);
         var message;
-        console.log(task);
         if (!task) {
           message = 'Task not found.';
         } else {

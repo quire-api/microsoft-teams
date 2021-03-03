@@ -410,6 +410,33 @@ class CardTemplates {
     });
   }
 
+  static commentCard(userName, taskName, comment, taskUrl) {
+    return CardFactory.adaptiveCard({
+      type: 'AdaptiveCard',
+      $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
+      version: '1.2',
+      body: [
+        {
+          type: 'TextBlock',
+          text: `**${userName}** commented on ${taskName}`,
+          wrap: true
+        },
+        {
+          type: 'TextBlock',
+          text: `"${comment}"`,
+          wrap: true
+        }
+      ],
+      actions: [
+        {
+          type: 'Action.OpenUrl',
+          title: 'View in Quire',
+          url: taskUrl
+        }
+      ]
+    });
+  }
+
   static _linkProjectCard(message) {
     return CardFactory.adaptiveCard({
       type: 'AdaptiveCard',
