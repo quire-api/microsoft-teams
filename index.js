@@ -9,6 +9,7 @@ require('dotenv').config({ path: ENV_FILE });
 const { BotFrameworkAdapter } = require('botbuilder');
 const { MicrosoftAppCredentials } = require('botframework-connector');
 const { BotActivityHandler } = require('./bot/botActivityHandler');
+const { CardTemplates } = require('./model/cardtemplates');
 const { QuireApi } = require('./utils/quireApi');
 const quireNotificationHandler = require('./bot/quireNotificationHandler');
 const dbAccess = require('./db/dbAccess');
@@ -30,8 +31,8 @@ adapter.onTurnError = async (context, error) => {
       return;
     }
   }
-
-  await context.sendActivity('Internal error');
+  await context.sendActivity(
+    MessageFactory.attachment(CardTemplates.unknownErrorCard()));
 };
 
 // Create bot handlers

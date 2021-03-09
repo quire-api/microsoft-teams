@@ -691,6 +691,29 @@ class CardTemplates {
     });
   }
 
+  static unknownErrorCard() {
+    return CardFactory.adaptiveCard({
+      type: 'AdaptiveCard',
+      $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
+      version: '1.3',
+      body: [
+        {
+          type: 'TextBlock',
+          text: 'Sorry, we encountered an unexpected error. We will look into it, '
+            +', but feel free to contact us. Please use the below contact us button to see what I can do for you.',
+          wrap: true
+        }
+      ],
+      actions: [
+        {
+          type: 'Action.OpenUrl',
+          title: 'Contact us',
+          url: 'https://quire.io/feedback'
+        }
+      ]
+    });
+  }
+
   static taskCompleteCard(task) {
     return CardFactory.adaptiveCard({
       type: 'AdaptiveCard',
