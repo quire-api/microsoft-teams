@@ -37,6 +37,8 @@ adapter.onTurnError = async (context, error) => {
 
 // Create bot handlers
 const botActivityHandler = new BotActivityHandler();
+//Init DB tables
+dbAccess.initDB();
 
 // Create HTTP server.
 const app = express();

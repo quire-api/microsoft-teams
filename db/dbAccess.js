@@ -95,6 +95,24 @@ function deleteLinkedProject(id) {
   db.run(`DELETE FROM linkedProject WHERE id = ?`, id);
 }
 
+function initDB() {
+    db.serialize(() => {
+      db.run(`CREATE TABLE IF NOT EXISTS token (
+        teamsId TEXT PRIMARY KEY NOT NULL,
+        accessToken TEXT NOT NULL,
+        refreshToken TEXT NOT NULL,
+        lastAccessTime INTEGER NOT NULL
+      )`);
+
+      db.run(`CREATE TABLE IF NOT EXISTS linkedProject (
+        id TEXT PRIMARY KEY NOT NULL,
+        oid TEXT NOT NULL,
+        nameText TEXT NOT NULL,
+        lastAccessTime INTEGER NOT NULL
+      )`);
+    });
+}
+
 function shutdown() {
   db.close();
 }
@@ -106,5 +124,6 @@ module.exports = {
   putLinkedProject: putLinkedProject,
   getLinkedProject: getLinkedProject,
   deleteLinkedProject: deleteLinkedProject,
+  initDB: initDB,
   shutdown: shutdown
 }
