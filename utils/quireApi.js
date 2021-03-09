@@ -10,9 +10,9 @@ const clientId = process.env.QuireAppId;
 const clientSecret = process.env.QuireAppSecret;
 const domainName = process.env.DomainName;
 const quireUrl = process.env.QuireUrl;
-const quireAddress = process.env.QuireAddress;
-const tokenUrl = `${quireAddress}/oauth/token`;
-const apiUrl = `${quireAddress}/api`;
+const quireAPIUrl = process.env.QuireAPIUrl;
+const tokenUrl = `${quireAPIUrl}/oauth/token`;
+const apiUrl = `${quireAPIUrl}/api`;
 
 class QuireApi {
 
