@@ -12,6 +12,7 @@ const { CardTemplates } = require('../model/cardtemplates');
 const { QuireApi } = require('../utils/quireApi');
 const dbAccess = require('../db/dbAccess');
 const utils = require('../utils/utils');
+const { QuireMessages } = require('../utils/quireMessages');
 const domainName = process.env.DomainName;
 
 class BotActivityHandler extends TeamsActivityHandler {
@@ -27,37 +28,6 @@ class BotActivityHandler extends TeamsActivityHandler {
       }
 
       switch (command) {
-        case 'add task':
-        case 'create task': {
-          let respondCard;
-          if (isLogin)
-            respondCard = CardTemplates.addTaskButton();
-          else
-            respondCard = CardTemplates.needToLoginCard('adding a new task');
-
-          await context.sendActivity(MessageFactory.attachment(respondCard));
-          break;
-        }
-        case 'link project': {
-          let respondCard;
-          if (isLogin)
-            respondCard = CardTemplates.linkProjectButton();
-          else
-            respondCard = CardTemplates.needToLoginCard('linking a project');
-
-          await context.sendActivity(MessageFactory.attachment(respondCard));
-          break;
-        }
-        case 'follow project': {
-          let respondCard;
-          if (isLogin)
-            respondCard = CardTemplates.followProjectButton();
-          else
-            respondCard = CardTemplates.needToLoginCard('following a project');
-
-          await context.sendActivity(MessageFactory.attachment(respondCard));
-          break;
-        }
         case 'login': {
           const conversationType = context.activity.conversation.conversationType;
           const conversationRef = TurnContext.getConversationReference(context.activity);
@@ -93,16 +63,16 @@ class BotActivityHandler extends TeamsActivityHandler {
           }
           break;
         }
-        case 'help':
-          const helpCard = CardTemplates.helpCard();
-          await context.sendActivity(MessageFactory.attachment(helpCard));
-          break;
         default:
-          if (context.activity.attachments) break; // ignore msg if with attachments
-          const unknownCommandCard = CardTemplates.unknownCommandCard();
-          await context.sendActivity(MessageFactory.attachment(unknownCommandCard));
-
+          if (isLogin) {
+            await this.handleTeamsCommands(context, command);
+          } else {
+            const desc = QuireMessages.getCommandDescriptions(command);
+            await context.sendActivity(MessageFactory.attachment(
+                CardTemplates.needToLoginCard(desc)));
+          }
       }
+      
       await next();
     });
 
@@ -115,6 +85,33 @@ class BotActivityHandler extends TeamsActivityHandler {
       }
       await next();
     });
+  }
+
+  async handleTeamsCommands(context, command) {
+    switch (command) {
+      case 'add task':
+      case 'create task':
+        let respondCard;
+        await context.sendActivity(MessageFactory.attachment(
+            CardTemplates.addTaskButton()));
+        break;
+      case 'link project':
+        await context.sendActivity(MessageFactory.attachment(
+            CardTemplates.linkProjectButton()));
+        break;
+      case 'follow project':
+        await context.sendActivity(MessageFactory.attachment(
+            CardTemplates.followProjectButton()));
+        break;
+      case 'help':
+        await context.sendActivity(MessageFactory.attachment(
+          CardTemplates.helpCard()));
+        break;
+      default:
+        if (context.activity.attachments) break; // ignore msg if with attachments
+        await context.sendActivity(MessageFactory.attachment(
+          CardTemplates.unknownCommandCard()));
+    }
   }
 
   async handleTeamsMessagingExtensionCardButtonClicked(context, cardData) {
