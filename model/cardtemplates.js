@@ -345,18 +345,18 @@ class CardTemplates {
             }
           }
         },
-        {
-          type: 'Action.Submit',
-          title: 'Complete task',
-          data: {
-            actionId: 'taskComplete_submit',
-            fetchId: 'taskComplete_submit',
-            taskOid: task.oid,
-            taskName: task.nameText,
-            msteams: conversationType === 'personal' ?
-                null : { type: 'task/fetch' }
-          }
-        }
+//        {
+//          type: 'Action.Submit',
+//          title: 'Complete task',
+//          data: {
+//            actionId: 'taskComplete_submit',
+//            fetchId: 'taskComplete_submit',
+//            taskOid: task.oid,
+//            taskName: task.nameText,
+//            msteams: conversationType === 'personal' ?
+//                null : { type: 'task/fetch' }
+//          }
+//        }
       ]
     };
   }
