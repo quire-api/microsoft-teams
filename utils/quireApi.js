@@ -45,12 +45,14 @@ class QuireApi {
   // GET /user/list
   static async getAllUsers(token) {
     return axios.get(`${apiUrl}/user/list`, authHeader(token))
-    .then(res => res.data);
+    .then(res => res.data)
+    .catch(handleError);
   }
 
   static async getCurrentUser(token) {
     return axios.get(`${apiUrl}/user/list`, authHeader(token))
-    .then(res => [res.data[0]]);
+    .then(res => [res.data[0]])
+    .catch(handleError);
   }
 
   // TODO must handle My tasks(oid = '-')
@@ -58,7 +60,8 @@ class QuireApi {
   static async getUsersByProjectOid(token, oid) {
     if (oid === '-') return await this.getCurrentUser(token);
     return axios.get(`${apiUrl}/user/list/project/${oid}`, authHeader(token))
-    .then(res => res.data);
+    .then(res => res.data)
+    .catch(handleError);
   }
 
   // GET /project/list params: { 'add-task' = true }
@@ -66,22 +69,22 @@ class QuireApi {
     // return axios.get(`${apiUrl}/project/list?add-task=true`, authHeader(token))
     // .then(res => res.data);
     return axios.get(`${apiUrl}/project/list`, authHeader(token))
-    .then(res => res.data);
+    .then(res => res.data)
+    .catch(handleError);
   }
 
   // GET /project/{oid}
   static async getProjectByOid(token, oid) {
     return axios.get(`${apiUrl}/project/${oid}`, authHeader(token))
-    .then(res => res.data);
+    .then(res => res.data)
+    .catch(handleError);
   }
 
   // POST /task/{oid}
   static async addTaskToProjectByOid(token, task, oid) {
     return axios.post(`${apiUrl}/task/${oid}`, task, authHeader(token))
     .then(res => res.data)
-    .catch(error => {
-      return {hasNoPermission: true};
-    });
+    .catch(handleError);
   }
 
   // POST /comment/{oid}
@@ -89,16 +92,15 @@ class QuireApi {
     return axios.post(`${apiUrl}/comment/${oid}`, {
       description: comment
     }, authHeader(token)).then(res => res.data)
-    .catch(error => {
-      return {hasNoPermission: true};
-    });
+    .catch(handleError);
   }
 
   // PUT /task/{oid}
   static async setTaskComplete(token, oid) {
     return axios.put(`${apiUrl}/task/${oid}`, {
       status: 100
-    }, authHeader(token)).then(res => res.data);
+    }, authHeader(token)).then(res => res.data)
+    .catch(handleError);
   }
 
   // GET /task/search/{oid}
@@ -106,13 +108,15 @@ class QuireApi {
     return axios.get(`${apiUrl}/task/search/${oid}`, {
       ...authHeader(token),
       params: {text: text}
-    }).then(res => res.data);
+    }).then(res => res.data)
+    .catch(handleError);
   }
 
   // GET /task/{oid}
   static async getTaskByOid(token, oid) {
     return axios(`${apiUrl}/task/${oid}`, authHeader(token))
-    .then(res => res.data);
+    .then(res => res.data)
+    .catch(handleError);
   }
 
   // GET /task/list/{oid}
@@ -138,9 +142,7 @@ class QuireApi {
       addFollowers: [`app|/${conversationId}|${serviceUrl}`]
     }, authHeader(token))
     .then(res => res.data)
-    .catch(error => {
-      return {hasNoPermission: true};
-    });
+    .catch(handleError);
   }
 
   // PUT /project/{oid}
@@ -149,7 +151,8 @@ class QuireApi {
     return axios.put(`${apiUrl}/project/${projectOid}`, {
       removeFollowers: [`app|/${conversationId}|${serviceUrl}`]
     }, authHeader(token))
-    .then(res => res.data);
+    .then(res => res.data)
+    .catch(handleError);
   }
 
   // PUT /task/{oid}
@@ -159,9 +162,7 @@ class QuireApi {
       addFollowers: [`app|/${conversationId}|${serviceUrl}`]
     }, authHeader(token))
     .then(res => res.data)
-    .catch(error => {
-      return {hasNoPermission: true};
-    });
+    .catch(handleError);
   }
 
   static async handleAuthStart(req, res) {
@@ -218,6 +219,13 @@ class QuireApi {
 function authHeader(token) {
   const header = { headers: { 'Authorization': `Bearer ${token.access_token}` } };
   return header;
+}
+
+function handleError(error) {
+  if (error.response && error.response.status === 403)
+    return {hasNoPermission: true};
+
+  return {connectionError: true};
 }
 
 module.exports.QuireApi = QuireApi;
