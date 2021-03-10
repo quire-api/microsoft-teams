@@ -179,25 +179,32 @@ class QuireApi {
 
   static async handleAuthEnd(req, res) {
     try {
-      const code = req.query.code;
-      const postRes = await axios.post(tokenUrl, querystring.encode({
-        grant_type: 'authorization_code',
-        code: code,
-        client_id: clientId,
-        client_secret: clientSecret
-      }));
-
       let resBody = '<html><head><title>Quire for Teams Authentication</title></head>';
       resBody += '<body>';
       resBody += '<script src="https://statics.teams.cdn.office.net/sdk/v1.6.0/js/MicrosoftTeams.min.js" integrity="sha384-mhp2E+BLMiZLe7rDIzj19WjgXJeI32NkPvrvvZBrMi5IvWup/1NUfS5xuYN5S3VT" crossorigin="anonymous"></script>';
       resBody += '<script type="text/javascript">';
       resBody += 'microsoftTeams.initialize();';
 
-      if (postRes.status == 200) {
-        const verificationCode = await utils.prepareVerificationCode(postRes.data);
-        resBody += `microsoftTeams.authentication.notifySuccess('${verificationCode}');`;
+      const code = req.query.code;
+      const error = req.query.error_description;
+      if (code) {
+         const postRes = await axios.post(tokenUrl, querystring.encode({
+          grant_type: 'authorization_code',
+          code: code,
+          client_id: clientId,
+          client_secret: clientSecret
+        }));
+
+        if (postRes.status == 200) {
+          const verificationCode = await utils.prepareVerificationCode(postRes.data);
+          resBody += `microsoftTeams.authentication.notifySuccess('${verificationCode}');`;
+        } else {
+          resBody += 'microsoftTeams.authentication.notifyFailure();';
+        }
       } else {
-        resBody += 'microsoftTeams.authentication.notifyFailure();';
+        // If auth error
+        //bot-auth-end?error=access_denied&error_description=The+user+denied+the+authorization+request.
+        resBody += `microsoftTeams.authentication.notifyFailure(${error ? `'${error}'`: ''});`;
       }
 
       resBody += '</script></body></html>';
