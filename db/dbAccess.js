@@ -110,7 +110,46 @@ function initDB() {
         nameText TEXT NOT NULL,
         lastAccessTime INTEGER NOT NULL
       )`);
+
+      db.run(`CREATE TABLE IF NOT EXISTS teamList (
+        id TEXT PRIMARY KEY NOT NULL,
+        lastAccessTime INTEGER NOT NULL
+      )`);
     });
+}
+
+function addToTeamList(teamId) {
+  db.get(`SELECT id FROM teamList WHERE id = ?`, teamId, (err, row) => {
+    let sql;
+    if (row) {
+      sql = `UPDATE teamList SET lastAccessTime = $lastAccessTime
+          WHERE id = $id`;
+    } else {
+      sql = `INSERT INTO teamList VALUES ($id, $lastAccessTime)`;
+    }
+    db.run(sql, {
+      $id: teamId,
+      $lastAccessTime: new Date().getTime()
+    });
+  });
+}
+
+function isInTeamList(teamId) {
+  return new Promise((resolve, reject) => {
+    db.get(`SELECT * FROM teamList WHERE id = ?`, teamId, (err, row) => {
+      if (row) {
+        resolve(true);
+        db.run(`UPDATE teamList SET lastAccessTime = ? WHERE id = ?`,
+            new Date().getTime(), teamId);
+      } else {
+        resolve(false);
+      }
+    });
+  });
+}
+
+function removeFromTeamList(teamId) {
+  db.run(`DELETE FROM teamList WHERE id = ?`, teamId);
 }
 
 function shutdown() {
@@ -125,5 +164,8 @@ module.exports = {
   getLinkedProject: getLinkedProject,
   deleteLinkedProject: deleteLinkedProject,
   initDB: initDB,
+  addToTeamList: addToTeamList,
+  isInTeamList: isInTeamList,
+  removeFromTeamList: removeFromTeamList,
   shutdown: shutdown
 }

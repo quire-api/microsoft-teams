@@ -77,11 +77,27 @@ class BotActivityHandler extends TeamsActivityHandler {
     });
 
     this.onMembersAdded(async (context, next) => {
-      const botId = context.activity.recipient.id;
-      // if bot added, send proactive welcome message
-      if (context.activity.membersAdded.find(elem => elem.id === botId)) {
+      const conversationType = context.activity.conversation.conversationType;
+      // if bot added to a personal chat, send proactive welcome message
+      if (conversationType === 'personal') {
         const welcomeCard = CardTemplates.welcomeCard();
         await context.sendActivity(MessageFactory.attachment(welcomeCard));
+      } else if (conversationType === 'groupChat' || conversationType === 'channel') {
+        const botId = context.activity.recipient.id;
+        if (context.activity.membersAdded.find(elem => elem.id === botId)) {
+          dbAccess.addToTeamList(context.activity.channelData.team.id);
+        }
+      }
+      await next();
+    });
+
+    this.onMembersRemoved(async (context, next) => {
+      const conversationType = context.activity.conversation.conversationType;
+      if (conversationType === 'groupChat' || conversationType === 'channel') {
+        const botId = context.activity.recipient.id;
+        if (context.activity.membersRemoved.find(elem => elem.id === botId)) {
+          dbAccess.removeFromTeamList(context.activity.channelData.team.id);
+        }
       }
       await next();
     });
@@ -136,12 +152,17 @@ class BotActivityHandler extends TeamsActivityHandler {
         const taskCompleteCard = CardTemplates.taskCompleteCard(result);
         await context.sendActivity(MessageFactory.attachment(taskCompleteCard));
         break;
-      case 'followTask_submit':
+      case 'followTask_submit': {
         const conversationId = utils.getConversationId(context.activity);
         const serviceUrl = context.activity.serviceUrl;
-        await QuireApi.addFollowerToTask(userToken, cardData.taskOid, conversationId, serviceUrl);
+        const respond = await QuireApi.addFollowerToTask(userToken, cardData.taskOid, conversationId, serviceUrl);
+        if (respond.hasNoPermission) {
+          const messageCard = CardTemplates.simpleMessageCard('You do not have permission to perform this action. Please contact your Admin.');
+          return createTaskInfo('Follow Task', messageCard);
+        }
         await context.sendActivity(`You have successfully followed ${cardData.taskName}`);
         break;
+      }
       default:
         console.log(actionId);
         await context.sendActivity('error: submit from message extension card not handled');
@@ -234,7 +255,9 @@ class BotActivityHandler extends TeamsActivityHandler {
         }
 
         const users = await QuireApi.getUsersByProjectOid(userToken, linkedProject.oid);
-        const addTaskCard = CardTemplates.addTaskCard(linkedProject, users);
+        const isInTeamList = context.activity.conversation.conversationType === 'personal'
+            ? false : await dbAccess.isInTeamList(context.activity.channelData.team.id);
+        const addTaskCard = CardTemplates.addTaskCard(linkedProject, users, isInTeamList);
         return createTaskInfo('Add Task', addTaskCard);
       }
       case 'addComment_fetch':
@@ -267,7 +290,11 @@ class BotActivityHandler extends TeamsActivityHandler {
       case 'followTask_submit': {
         const conversationId = utils.getConversationId(context.activity);
         const serviceUrl = context.activity.serviceUrl;
-        await QuireApi.addFollowerToTask(userToken, data.taskOid, conversationId, serviceUrl);
+        const respond = await QuireApi.addFollowerToTask(userToken, cardData.taskOid, conversationId, serviceUrl);
+        if (respond.hasNoPermission) {
+          const messageCard = CardTemplates.simpleMessageCard('You do not have permission to perform this action. Please contact your Admin.');
+          return createTaskInfo('Follow Task', messageCard);
+        }
         const messageCard = 
             CardTemplates.simpleMessageCard(`You have successfully followed ${data.taskName}`);
         return createTaskInfo('Follow Task', messageCard);
@@ -359,13 +386,21 @@ class BotActivityHandler extends TeamsActivityHandler {
         }
         const conversationType = context.activity.conversation.conversationType;
         const respond = await QuireApi.addTaskToProjectByOid(userToken, task, oid);
+        if (respond.hasNoPermission) {
+          const messageCard = CardTemplates.simpleMessageCard('You do not have permission to perform this action. Please contact your Admin.');
+          return createTaskInfo('Add Task', messageCard);
+        }
+
         const taskCard = 
             CardTemplates.taskCard(respond, data.project.nameText, conversationType);
+        await this.sendMessageToMember(context, async (t) => {
+          await t.sendActivity(`Your new task **${data.taskName_input}** has been added to Quire`);
+          await t.sendActivity(MessageFactory.attachment(taskCard));
+        });
 
-        if (conversationType === 'personal') {
-          await context.sendActivity('Your new task has been added to Quire.');
+        if (data.share_task === 'true') {
+          await context.sendActivity(MessageFactory.attachment(taskCard));
         }
-        await context.sendActivity(MessageFactory.attachment(taskCard));
         break;
       case 'addComment_submit': {
         if (data.comment_input.length == 0) {
@@ -408,7 +443,11 @@ class BotActivityHandler extends TeamsActivityHandler {
         if (!data.followProject_input) break;
 
         const project = JSON.parse(data.followProject_input);
-        await QuireApi.addFollowerToProject(userToken, project.oid, conversationId, serviceUrl);
+        const respond = await QuireApi.addFollowerToProject(userToken, project.oid, conversationId, serviceUrl);
+        if (respond.hasNoPermission) {
+          const messageCard = CardTemplates.simpleMessageCard('You do not have permission to perform this action. Please contact your Admin.');
+          return createTaskInfo('Follow Project', messageCard);
+        }
         const message = `You have successfully followed ${project.nameText}`;
         if (context.activity.conversation.conversationType === 'personal') {
           await context.sendActivity(message);
@@ -420,7 +459,11 @@ class BotActivityHandler extends TeamsActivityHandler {
       case 'followTask_submit': {
         const conversationId = utils.getConversationId(context.activity);
         const serviceUrl = context.activity.serviceUrl;
-        await QuireApi.addFollowerToTask(userToken, data.taskOid, conversationId, serviceUrl);
+        const respond = await QuireApi.addFollowerToTask(userToken, cardData.taskOid, conversationId, serviceUrl);
+        if (respond.hasNoPermission) {
+          const messageCard = CardTemplates.simpleMessageCard('You do not have permission to perform this action. Please contact your Admin.');
+          return createTaskInfo('Follow Task', messageCard);
+        }
         await context.sendActivity(`You have successfully followed ${data.taskName}`);
         break;
       }
@@ -661,6 +704,22 @@ class BotActivityHandler extends TeamsActivityHandler {
       }
       throw error;
     }
+  }
+
+  async sendMessageToMember(context, callback) {
+    let ref = TurnContext.getConversationReference(context.activity);
+    ref.user = {
+      id: context.activity.from.id,
+      aadObjectId: context.activity.from.aadObjectId,
+      tenantId: context.activity.conversation.tenantId
+    }
+
+    await context.adapter.createConversation(ref, async (t1) => {
+      const ref2 = TurnContext.getConversationReference(t1.activity);
+      await t1.adapter.continueConversation(ref2, async (t2) => {
+        await callback(t2);
+      });
+    });
   }
 }
 

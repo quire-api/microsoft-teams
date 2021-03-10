@@ -63,7 +63,9 @@ class QuireApi {
 
   // GET /project/list params: { 'add-task' = true }
   static async getAllProjects(token) {
-    return axios.get(`${apiUrl}/project/list?add-task=true`, authHeader(token))
+    // return axios.get(`${apiUrl}/project/list?add-task=true`, authHeader(token))
+    // .then(res => res.data);
+    return axios.get(`${apiUrl}/project/list`, authHeader(token))
     .then(res => res.data);
   }
 
@@ -76,7 +78,10 @@ class QuireApi {
   // POST /task/{oid}
   static async addTaskToProjectByOid(token, task, oid) {
     return axios.post(`${apiUrl}/task/${oid}`, task, authHeader(token))
-    .then(res => res.data);
+    .then(res => res.data)
+    .catch(error => {
+      return {hasNoPermission: true};
+    });
   }
 
   // POST /comment/{oid}
@@ -129,7 +134,10 @@ class QuireApi {
     return axios.put(`${apiUrl}/project/${projectOid}`, {
       addFollowers: [`app|/${conversationId}|${serviceUrl}`]
     }, authHeader(token))
-    .then(res => res.data);
+    .then(res => res.data)
+    .catch(error => {
+      return {hasNoPermission: true};
+    });
   }
 
   // PUT /project/{oid}
@@ -147,7 +155,10 @@ class QuireApi {
     return axios.put(`${apiUrl}/task/${taskOid}`, {
       addFollowers: [`app|/${conversationId}|${serviceUrl}`]
     }, authHeader(token))
-    .then(res => res.data);
+    .then(res => res.data)
+    .catch(error => {
+      return {hasNoPermission: true};
+    });
   }
 
   static async handleAuthStart(req, res) {

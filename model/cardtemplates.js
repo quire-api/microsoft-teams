@@ -133,7 +133,7 @@ class CardTemplates {
     });
   }
 
-  static addTaskCard(project, users) {
+  static addTaskCard(project, users, showShareTask) {
     return CardFactory.adaptiveCard({
       type: 'AdaptiveCard',
       $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
@@ -231,6 +231,12 @@ class CardTemplates {
           id: 'description_input',
           placeholder: 'Task description',
           IsMultiline: true
+        },
+        {
+          type: "Input.Toggle",
+          id: 'share_task',
+          title: `Share task to this channel`,
+          isVisible: showShareTask
         }
       ],
       actions: [
