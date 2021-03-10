@@ -88,7 +88,10 @@ class QuireApi {
   static async addCommentToTaskByOid(token, comment, oid) {
     return axios.post(`${apiUrl}/comment/${oid}`, {
       description: comment
-    }, authHeader(token)).then(res => res.data);
+    }, authHeader(token)).then(res => res.data)
+    .catch(error => {
+      return {hasNoPermission: true};
+    });
   }
 
   // PUT /task/{oid}

@@ -157,8 +157,8 @@ class BotActivityHandler extends TeamsActivityHandler {
         const serviceUrl = context.activity.serviceUrl;
         const respond = await QuireApi.addFollowerToTask(userToken, cardData.taskOid, conversationId, serviceUrl);
         if (respond.hasNoPermission) {
-          const messageCard = CardTemplates.simpleMessageCard('You do not have permission to perform this action. Please contact your Admin.');
-          return createTaskInfo('Follow Task', messageCard);
+          await context.sendActivity('You do not have permission to perform this action. Please contact your Admin.');
+          break;
         }
         await context.sendActivity(`You have successfully followed ${cardData.taskName}`);
         break;
@@ -225,6 +225,9 @@ class BotActivityHandler extends TeamsActivityHandler {
     } else if (data.fetchId === 'followProject_fetch') {
       title = 'Follow Project';
       message = 'following a project';
+    } else if (data.fetchId === 'followTask_submit') {
+      title = 'Follow Task';
+      message = 'following a task';
     } else if (data.fetchId === 'taskComplete_submit') {
       title = 'Complete Task';
       message = 'completing a task';
@@ -290,7 +293,7 @@ class BotActivityHandler extends TeamsActivityHandler {
       case 'followTask_submit': {
         const conversationId = utils.getConversationId(context.activity);
         const serviceUrl = context.activity.serviceUrl;
-        const respond = await QuireApi.addFollowerToTask(userToken, cardData.taskOid, conversationId, serviceUrl);
+        const respond = await QuireApi.addFollowerToTask(userToken, data.taskOid, conversationId, serviceUrl);
         if (respond.hasNoPermission) {
           const messageCard = CardTemplates.simpleMessageCard('You do not have permission to perform this action. Please contact your Admin.');
           return createTaskInfo('Follow Task', messageCard);
@@ -408,6 +411,10 @@ class BotActivityHandler extends TeamsActivityHandler {
           return createTaskInfo('Add Comment', messageCard);
         }
         const task = await QuireApi.addCommentToTaskByOid(userToken, data.comment_input, data.taskOid);
+        if (task.hasNoPermission) {
+          const messageCard = CardTemplates.simpleMessageCard('You do not have permission to perform this action. Please contact your Admin.');
+          return createTaskInfo('Follow Project', messageCard);
+        }
         const commentCard = CardTemplates.commentCard(context.activity.from.name, task.owner.name, task.description, task.url);
         
         await context.sendActivity(MessageFactory.attachment(commentCard));
@@ -459,7 +466,7 @@ class BotActivityHandler extends TeamsActivityHandler {
       case 'followTask_submit': {
         const conversationId = utils.getConversationId(context.activity);
         const serviceUrl = context.activity.serviceUrl;
-        const respond = await QuireApi.addFollowerToTask(userToken, cardData.taskOid, conversationId, serviceUrl);
+        const respond = await QuireApi.addFollowerToTask(userToken, data.taskOid, conversationId, serviceUrl);
         if (respond.hasNoPermission) {
           const messageCard = CardTemplates.simpleMessageCard('You do not have permission to perform this action. Please contact your Admin.');
           return createTaskInfo('Follow Task', messageCard);
