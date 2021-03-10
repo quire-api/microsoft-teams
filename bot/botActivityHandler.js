@@ -120,6 +120,14 @@ class BotActivityHandler extends TeamsActivityHandler {
 
     const actionId = cardData.actionId;
     const teamsId = context.activity.from.id;
+    const isLogin = await utils.isUserLogin(teamsId);
+    if (!isLogin) {
+        const desc = QuireMessages.getButtonLabel(actionId);
+        await context.sendActivity(MessageFactory.attachment(
+            CardTemplates.needToLoginCard(desc)));
+        return;
+    }
+
     const userToken = await dbAccess.getToken(teamsId);
 
     switch (actionId) {

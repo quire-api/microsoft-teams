@@ -9,9 +9,20 @@ const commandDescriptions = {
   'login': 'adding a new task',
 };
 
+const cardButtonLabels = {
+  'taskComplete_submit': 'Complete task',
+  'followTask_submit': 'Follow task',
+  'addComment_submit': 'Add comment',
+  'addComment_fetch': 'Add comment',
+};
+
 class QuireMessages {
     static getCommandDescriptions(command) {
         return commandDescriptions[command];
+    }
+
+    static getButtonLabel(actionId) {
+        return cardButtonLabels[actionId];
     }
 }
 
