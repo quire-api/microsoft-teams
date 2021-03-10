@@ -28,6 +28,10 @@ class BotActivityHandler extends TeamsActivityHandler {
       }
 
       switch (command) {
+        case 'help':
+          await context.sendActivity(MessageFactory.attachment(
+                CardTemplates.helpCard()));
+          break;
         case 'login': {
           const conversationType = context.activity.conversation.conversationType;
           const conversationRef = TurnContext.getConversationReference(context.activity);
@@ -118,10 +122,6 @@ class BotActivityHandler extends TeamsActivityHandler {
       case 'follow project':
         await context.sendActivity(MessageFactory.attachment(
             CardTemplates.followProjectButton()));
-        break;
-      case 'help':
-        await context.sendActivity(MessageFactory.attachment(
-          CardTemplates.helpCard()));
         break;
       default:
         if (context.activity.attachments) break; // ignore msg if with attachments
