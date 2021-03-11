@@ -150,26 +150,32 @@ class BotActivityHandler extends TeamsActivityHandler {
 
     const userToken = await dbAccess.getToken(teamsId);
 
-    switch (actionId) {
-      case 'taskComplete_submit':
-        const result = await QuireApi.setTaskComplete(userToken, cardData.taskOid);
-        const taskCompleteCard = CardTemplates.taskCompleteCard(result);
-        await context.sendActivity(MessageFactory.attachment(taskCompleteCard));
-        break;
-      case 'followTask_submit': {
-        const conversationId = utils.getConversationId(context.activity);
-        const serviceUrl = context.activity.serviceUrl;
-        const respond = await QuireApi.addFollowerToTask(userToken, cardData.taskOid, conversationId, serviceUrl);
-        if (respond.hasNoPermission) {
-          await context.sendActivity('You do not have permission to perform this action. Please contact your Admin.');
+    try {
+      switch (actionId) {
+        case 'taskComplete_submit':
+          const result = await QuireApi.setTaskComplete(userToken, cardData.taskOid);
+          const taskCompleteCard = CardTemplates.taskCompleteCard(result);
+          await context.sendActivity(MessageFactory.attachment(taskCompleteCard));
+          break;
+        case 'followTask_submit': {
+          const conversationId = utils.getConversationId(context.activity);
+          const serviceUrl = context.activity.serviceUrl;
+          await QuireApi.addFollowerToTask(userToken, cardData.taskOid, conversationId, serviceUrl);
+          await context.sendActivity(`You have successfully followed ${cardData.taskName}`);
           break;
         }
-        await context.sendActivity(`You have successfully followed ${cardData.taskName}`);
-        break;
+        default:
+          console.log(actionId);
+          await context.sendActivity('error: submit from message extension card not handled');
       }
-      default:
-        console.log(actionId);
-        await context.sendActivity('error: submit from message extension card not handled');
+    } catch (error) {
+      if (error.hasNoPermission) {
+        await context.sendActivity('You do not have permission to perform this action. Please contact your Admin.');
+      } else if (error.connectionError) {
+        await context.sendActivity('Sorry, Quire is temporary unavailable. We will be back shortly.');
+      } else {
+        throw error;
+      }
     }
   }
 
@@ -198,20 +204,28 @@ class BotActivityHandler extends TeamsActivityHandler {
       else
         return await this.sendPleaseLoginCard(context, data);
     } catch (error) {
-      if (!(error.isAxiosError && error.response.status === 401))
-        throw error;
-
-      // try to refresh token and fetch again
-      if (userToken && !data.token) {
-        const token = await QuireApi.refreshAndStoreToken(teamsId, userToken);
-        if (!token.isInvalidToken) {
-          data.token = token;
-          return await this.handleTeamsTaskModuleFetch(context, taskModuleRequest);
+      if (error.response && error.response.status === 401) {
+        // try to refresh token and fetch again
+        if (userToken && !data.token) {
+          const token = await QuireApi.refreshAndStoreToken(teamsId, userToken);
+          if (!token.isInvalidToken) {
+            data.token = token;
+            return await this.handleTeamsTaskModuleFetch(context, taskModuleRequest);
+          }
         }
-      }
 
-      // refresh token failed, send 'Please login' message
-      this.sendPleaseLoginCard(context, data);
+        // refresh token failed, send 'Please login' message
+        this.sendPleaseLoginCard(context, data);
+      } else {
+        let message;
+        if (error.hasNoPermission) {
+          message = 'You do not have permission to perform this action. Please contact your Admin.';
+        } else if (error.connectionError) {
+          message = 'Sorry, Quire is temporary unavailable. We will be back shortly.';
+        }
+
+        return createTaskInfo('Error', CardTemplates.simpleMessageCard(message));
+      }
     }
   }
 
@@ -320,45 +334,53 @@ class BotActivityHandler extends TeamsActivityHandler {
       userToken = data.token || await dbAccess.getToken(teamsId);
       return await this.handleSubmit(context, data, userToken);
     } catch (error) {
-      if (!(error.isAxiosError && error.response.status === 401))
-        throw error;
-
-      const token = await QuireApi.refreshAndStoreToken(teamsId, userToken);
-      if (token.isInvalidToken) {
-        let message;
-        switch (data.actionId) {
-          case 'changeProject_submit':
-            message = 'changing project';
-            break;
-          case 'setProject_submit':
-            message = 'setting project';
-            break;
-          case 'addTask_submit':
-            message = 'adding a task';
-            break;
-          case 'addComment_submit':
-            message = 'adding a comment';
-            break;
-          case 'taskComplete_submit':
-            message = 'completing a task';
-            break;
-          case 'linkProject_submit':
-            message = 'linking a project';
-            break;
-          case 'followProject_submit':
-            message = 'following a project';
-            break;
-          case 'followTask_submit':
-            message = 'following a task';
-            break;
+      if (error.response && error.response.status === 401) {
+        const token = await QuireApi.refreshAndStoreToken(teamsId, userToken);
+        if (token.isInvalidToken) {
+          let message;
+          switch (data.actionId) {
+            case 'changeProject_submit':
+              message = 'changing project';
+              break;
+            case 'setProject_submit':
+              message = 'setting project';
+              break;
+            case 'addTask_submit':
+              message = 'adding a task';
+              break;
+            case 'addComment_submit':
+              message = 'adding a comment';
+              break;
+            case 'taskComplete_submit':
+              message = 'completing a task';
+              break;
+            case 'linkProject_submit':
+              message = 'linking a project';
+              break;
+            case 'followProject_submit':
+              message = 'following a project';
+              break;
+            case 'followTask_submit':
+              message = 'following a task';
+              break;
+          }
+          const needToLoginCard = CardTemplates.needToLoginCard(message);
+          await context.sendActivity(MessageFactory.attachment(needToLoginCard));
+          return;
         }
-        const needToLoginCard = CardTemplates.needToLoginCard(message);
-        await context.sendActivity(MessageFactory.attachment(needToLoginCard));
-        return;
-      }
 
-      taskModuleRequest.token = token;
-      return await this.handleTeamsTaskModuleSubmit(context, taskModuleRequest);
+        taskModuleRequest.token = token;
+        return await this.handleTeamsTaskModuleSubmit(context, taskModuleRequest);
+      } else {
+        let message;
+        if (error.hasNoPermission) {
+          message = 'You do not have permission to perform this action. Please contact your Admin.';
+        } else if (error.connectionError) {
+          message = 'Sorry, Quire is temporary unavailable. We will be back shortly.';
+        }
+
+        return createTaskInfo('Error', CardTemplates.simpleMessageCard(message));
+      }
     }
   }
 

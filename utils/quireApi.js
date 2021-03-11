@@ -223,9 +223,11 @@ function authHeader(token) {
 
 function handleError(error) {
   if (error.response && error.response.status === 403)
-    return {hasNoPermission: true};
+    error.hasNoPermission = true;
+  else
+    error.connectionError = true;
 
-  return {connectionError: true};
+  throw error;
 }
 
 module.exports.QuireApi = QuireApi;
