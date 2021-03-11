@@ -841,7 +841,7 @@ class CardTemplates {
         [
           {
             type: 'Action.Submit',
-            title: 'Link a project',
+            title: 'Link project',
             data: {
               fetchId: 'linkProject_fetch',
               msteams: {type: 'task/fetch'}
