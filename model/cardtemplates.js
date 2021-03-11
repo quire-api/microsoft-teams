@@ -62,11 +62,11 @@ class CardTemplates {
         },
         {
           type: 'Action.Submit',
-          title: 'Help',
+          title: 'Take a tour',
           data: {
             msteams: {
               type: 'imBack',
-              value: 'Help'
+              value: 'Take a tour'
             }
           }
         }
@@ -82,7 +82,7 @@ class CardTemplates {
       body: [
         {
           type: 'TextBlock',
-          text: `Oops! You need to log into your Quire account before ${text}.`,
+          text: `You need to log into your Quire account before ${text}.`,
           wrap: true
         }
       ],
@@ -351,18 +351,18 @@ class CardTemplates {
             }
           }
         },
-//        {
-//          type: 'Action.Submit',
-//          title: 'Complete task',
-//          data: {
-//            actionId: 'taskComplete_submit',
-//            fetchId: 'taskComplete_submit',
-//            taskOid: task.oid,
-//            taskName: task.nameText,
-//            msteams: conversationType === 'personal' ?
-//                null : { type: 'task/fetch' }
-//          }
-//        }
+       /*{
+         type: 'Action.Submit',
+         title: 'Complete task',
+         data: {
+           actionId: 'taskComplete_submit',
+           fetchId: 'taskComplete_submit',
+           taskOid: task.oid,
+           taskName: task.nameText,
+           msteams: conversationType === 'personal' ?
+               null : { type: 'task/fetch' }
+         }
+       }*/
       ]
     };
   }
@@ -787,10 +787,116 @@ class CardTemplates {
         {
           type: 'Action.OpenUrl',
           title: 'Learn more',
-          url: 'https://quire.io/blog'
+          url: 'https://quire.io/guide/microsoft-teams/'
         }
       ]
     });
+  }
+
+  static _tourCard(title, desc, image, buttons) {
+    return CardFactory.adaptiveCard({
+        type: 'AdaptiveCard',
+        $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
+        version: '1.3',
+        body: [
+          {
+            type: 'TextBlock',
+            size: 'large',
+            weight: 'bolder',
+            text: title,
+          },
+          {
+            type: 'Image',
+            url: image
+          },
+          {
+            type: 'TextBlock',
+            text: desc,
+            wrap: true
+          },
+        ],
+        actions: buttons
+      });
+  }
+
+  static tourCard() {
+    return [
+      this._tourCard(
+        'Welcome to Quire bot', 
+        'You can interact with Quire bot from your team channel. ' +
+            'Quire bot can help you add a task, assign and add comment for '+
+            'a task via a series of actionable messages.',
+        'https://d12y7sg0iam4lc.cloudfront.net/s/img/app/msteams/tour_1.png',
+        [
+          {
+            type: 'Action.OpenUrl',
+            title: 'Learn more',
+            url: 'https://quire.io/guide/microsoft-teams/'
+          }
+        ]),
+      this._tourCard(
+        'Link a project in Quire', 
+        'Link a specific project in Quire that you would want Microsoft Teams to access.',
+        'https://d12y7sg0iam4lc.cloudfront.net/s/img/app/msteams/tour_2.png',
+        [
+          {
+            type: 'Action.Submit',
+            title: 'Link a project',
+            data: {
+              fetchId: 'linkProject_fetch',
+              msteams: {type: 'task/fetch'}
+            }
+          },
+          {
+            type: 'Action.OpenUrl',
+            title: 'Learn more',
+            url: 'https://quire.io/guide/microsoft-teams/'
+          }
+        ]),
+      this._tourCard(
+        'Add a new task to Quire', 
+        'Once you have successfully linked a project, you can add your first task by sending a message '+
+            '"Add task" and Quire will help you create your task automatically!',
+        'https://d12y7sg0iam4lc.cloudfront.net/s/img/app/msteams/tour_3.png',
+        [
+          {
+            type: 'Action.Submit',
+            title: 'Add task',
+            data: {
+              fetchId: 'addTask_fetch',
+              msteams: {type: 'task/fetch'}
+            }
+          },
+          {
+            type: 'Action.OpenUrl',
+            title: 'Learn more',
+            url: 'https://quire.io/guide/microsoft-teams/'
+          }
+        ]),
+      this._tourCard(
+        'Get help from Quire bot', 
+        'At any time you want to look for help from Quire bot, just type "help" in the message composer. '+
+            'The list of available commands that you can use with Quire and Microsoft Teams integration will be '+
+            'presented for you.',
+        'https://d12y7sg0iam4lc.cloudfront.net/s/img/app/msteams/tour_4.png',
+        [
+          {
+            type: 'Action.Submit',
+            title: 'Help',
+            data: {
+              msteams: {
+                type: 'imBack',
+                value: 'Help'
+              }
+            }
+          },
+          {
+            type: 'Action.OpenUrl',
+            title: 'Learn more',
+            url: 'https://quire.io/guide/microsoft-teams/'
+          }
+        ]),
+    ];
   }
 }
 

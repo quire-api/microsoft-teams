@@ -32,6 +32,10 @@ class BotActivityHandler extends TeamsActivityHandler {
           await context.sendActivity(MessageFactory.attachment(
                 CardTemplates.helpCard()));
           break;
+        case 'take a tour':
+          await context.sendActivity(MessageFactory.carousel(
+            CardTemplates.tourCard()));
+          break;
         case 'login': {
           const conversationType = context.activity.conversation.conversationType;
           const conversationRef = TurnContext.getConversationReference(context.activity);
