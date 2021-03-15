@@ -254,7 +254,7 @@ class BotActivityHandler extends TeamsActivityHandler {
       const loginCard = CardTemplates.needToLoginCard(message);
       await context.sendActivity(MessageFactory.attachment(loginCard));
     } else {
-      message = `Oops! You need to log into your Quire account before ${message}`
+      message = `You need to log into your Quire account before ${message}`
       const card = CardTemplates.simpleMessageCard(message);
       return createTaskInfo(title, card);
     }

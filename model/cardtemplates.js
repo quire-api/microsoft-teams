@@ -627,7 +627,7 @@ class CardTemplates {
   }
 
   static needToLoginButton(message) {
-    return this._loginCard(`Oops! You need to log into your Quire account before ${message}`);
+    return this._loginCard(`You need to log into your Quire account before ${message}`);
   }
 
   static logoutMessageCard() {
