@@ -411,7 +411,7 @@ class BotActivityHandler extends TeamsActivityHandler {
           description: data.description_input
         };
         if (task.name.length == 0) {
-          const messageCard = CardTemplates.simpleMessageCard('Please type a task name first.');
+          const messageCard = CardTemplates.simpleMessageCard('Task name cannot be empty.');
           return createTaskInfo('Add Task', messageCard);
         }
 
