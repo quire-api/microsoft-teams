@@ -432,7 +432,9 @@ class BotActivityHandler extends TeamsActivityHandler {
           await t.sendActivity(MessageFactory.attachment(taskCard));
         });
 
-        await context.sendActivity(MessageFactory.attachment(taskCard));
+        if (conversationType !== 'personal')
+          await context.sendActivity(MessageFactory.attachment(taskCard));
+
         break;
       case 'addComment_submit': {
         if (data.comment_input.length == 0) {
