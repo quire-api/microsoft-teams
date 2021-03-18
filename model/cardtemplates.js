@@ -133,7 +133,7 @@ class CardTemplates {
     });
   }
 
-  static addTaskCard(project, users, showShareTask) {
+  static addTaskCard(project, users) {
     return CardFactory.adaptiveCard({
       type: 'AdaptiveCard',
       $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
@@ -231,12 +231,6 @@ class CardTemplates {
           id: 'description_input',
           placeholder: 'Task description',
           IsMultiline: true
-        },
-        {
-          type: "Input.Toggle",
-          id: 'share_task',
-          title: `Share task to this channel`,
-          isVisible: showShareTask
         }
       ],
       actions: [
@@ -396,7 +390,7 @@ class CardTemplates {
       body: [
         {
           type: 'TextBlock',
-          text: `Add a comment to **${taskName}**`,
+          text: `Add a comment to ${taskName}`,
           wrap: true
         },
         {
@@ -424,7 +418,7 @@ class CardTemplates {
       body: [
         {
           type: 'TextBlock',
-          text: `**${userName}** commented on ${taskName}`,
+          text: `${userName} commented on ${taskName}`,
           wrap: true
         },
         {
@@ -670,11 +664,36 @@ class CardTemplates {
     });
   }
 
+  static pleaseAddBotToChannelCard(conversationType) {
+    let message;
+    if (conversationType === 'groupChat')
+      message = 'Please add the Quire bot to this conversation first.';
+    else if (conversationType === 'channel')
+      message = 'Please add the Quire bot to this channel first.'
+    return CardFactory.adaptiveCard({
+      type: 'AdaptiveCard',
+      $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
+      version: '1.2',
+      body: [{
+          type: 'TextBlock',
+          text: message,
+          wrap: true
+      }],
+      actions: [
+        {
+          type: 'Action.OpenUrl',
+          title: 'Show me how',
+          url: 'https://support.microsoft.com/en-us/office/add-an-app-to-microsoft-teams-b2217706-f7ed-4e64-8e96-c413afd02f77'
+        }
+      ]
+    });
+  }
+
   static unknownCommandCard() {
     return CardFactory.adaptiveCard({
       type: 'AdaptiveCard',
       $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
-      version: '1.3',
+      version: '1.2',
       body: [
         {
           type: 'TextBlock',
@@ -701,7 +720,7 @@ class CardTemplates {
     return CardFactory.adaptiveCard({
       type: 'AdaptiveCard',
       $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
-      version: '1.3',
+      version: '1.2',
       body: [
         {
           type: 'TextBlock',

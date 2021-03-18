@@ -93,7 +93,7 @@ class BotActivityHandler extends TeamsActivityHandler {
       } else if (conversationType === 'groupChat' || conversationType === 'channel') {
         const botId = context.activity.recipient.id;
         if (context.activity.membersAdded.find(elem => elem.id === botId)) {
-          dbAccess.addToTeamList(context.activity.channelData.team.id);
+          dbAccess.addToTeamList(utils.getConversationId(context.activity));
         }
       }
       await next();
@@ -104,7 +104,7 @@ class BotActivityHandler extends TeamsActivityHandler {
       if (conversationType === 'groupChat' || conversationType === 'channel') {
         const botId = context.activity.recipient.id;
         if (context.activity.membersRemoved.find(elem => elem.id === botId)) {
-          dbAccess.removeFromTeamList(context.activity.channelData.team.id);
+          dbAccess.removeFromTeamList(utils.getConversationId(context.activity));
         }
       }
       await next();
@@ -161,7 +161,7 @@ class BotActivityHandler extends TeamsActivityHandler {
           const conversationId = utils.getConversationId(context.activity);
           const serviceUrl = context.activity.serviceUrl;
           await QuireApi.addFollowerToTask(userToken, cardData.taskOid, conversationId, serviceUrl);
-          await context.sendActivity(`You have successfully followed ${cardData.taskName}`);
+          await context.sendActivity(`${context.activity.from.name} has got this channel to follow ${cardData.taskName}`);
           break;
         }
         default:
@@ -261,6 +261,11 @@ class BotActivityHandler extends TeamsActivityHandler {
   }
 
   async fetchHandler(context, data, userToken) {
+    const conversationType = context.activity.conversation.conversationType;    
+    if ((conversationType === 'groupChat' || conversationType === 'channel') && !await dbAccess.isChannelMember(utils.getConversationId(context.activity))) {
+      return createTaskInfo('Error', CardTemplates.pleaseAddBotToChannelCard(conversationType));
+    }
+
     switch (data.fetchId) {
       case 'addTask_fetch': {
         const conversationId = utils.getConversationId(context.activity);
@@ -276,9 +281,7 @@ class BotActivityHandler extends TeamsActivityHandler {
         }
 
         const users = await QuireApi.getUsersByProjectOid(userToken, linkedProject.oid);
-        const isInTeamList = context.activity.conversation.conversationType === 'personal'
-            ? false : await dbAccess.isInTeamList(context.activity.channelData.team.id);
-        const addTaskCard = CardTemplates.addTaskCard(linkedProject, users, isInTeamList);
+        const addTaskCard = CardTemplates.addTaskCard(linkedProject, users);
         return createTaskInfo('Add Task', addTaskCard);
       }
       case 'addComment_fetch':
@@ -334,7 +337,9 @@ class BotActivityHandler extends TeamsActivityHandler {
       userToken = data.token || await dbAccess.getToken(teamsId);
       return await this.handleSubmit(context, data, userToken);
     } catch (error) {
-      if (error.response && error.response.status === 401) {
+      if (error.code === 'BotNotInConversationRoster') {
+        return; // ignore
+      } else if (error.response && error.response.status === 401) {
         const token = await QuireApi.refreshAndStoreToken(teamsId, userToken);
         if (token.isInvalidToken) {
           let message;
@@ -406,7 +411,7 @@ class BotActivityHandler extends TeamsActivityHandler {
           description: data.description_input
         };
         if (task.name.length == 0) {
-          const messageCard = CardTemplates.simpleMessageCard('Please input task name!');
+          const messageCard = CardTemplates.simpleMessageCard('Please type a task name first.');
           return createTaskInfo('Add Task', messageCard);
         }
 
@@ -423,13 +428,11 @@ class BotActivityHandler extends TeamsActivityHandler {
         const taskCard = 
             CardTemplates.taskCard(respond, data.project.nameText, conversationType);
         await this.sendMessageToMember(context, async (t) => {
-          await t.sendActivity(`Your new task **${data.taskName_input}** has been added to Quire`);
+          await t.sendActivity(`Your new task ${data.taskName_input} has been added to Quire`);
           await t.sendActivity(MessageFactory.attachment(taskCard));
         });
 
-        if (data.share_task === 'true') {
-          await context.sendActivity(MessageFactory.attachment(taskCard));
-        }
+        await context.sendActivity(MessageFactory.attachment(taskCard));
         break;
       case 'addComment_submit': {
         if (data.comment_input.length == 0) {
@@ -481,7 +484,7 @@ class BotActivityHandler extends TeamsActivityHandler {
           const messageCard = CardTemplates.simpleMessageCard('You do not have permission to perform this action. Please contact your Admin.');
           return createTaskInfo('Follow Project', messageCard);
         }
-        const message = `You have successfully followed ${project.nameText}`;
+        const message = `${context.activity.from.name} has got this channel to follow ${project.nameText}`;
         if (context.activity.conversation.conversationType === 'personal') {
           await context.sendActivity(message);
           break;
@@ -598,8 +601,40 @@ class BotActivityHandler extends TeamsActivityHandler {
 
   async handleTeamsMessagingExtensionSubmitAction(context, action) {
     const teamsId = context.activity.from.id;
-    const userToken = action.token || await dbAccess.getToken(teamsId);
+    let token;
+    if (action.state) {
+      const verificationCode = action.state;
+      token = await utils.getUserTokenByVerificationCode(verificationCode);
+      utils.addExpirationTimeForToken(token);
+      if (token) { // if login success, put token to storage and continue search
+        dbAccess.putToken(teamsId, token);
+      } else {
+        return {
+          composeExtension: {
+            type: 'message',
+            text: 'authentication failed!!!'
+          }
+        };
+      }
+    }
+
+    const userToken = token || action.token || await dbAccess.getToken(teamsId);
     const data = action.data;
+    const loginAction = {
+      composeExtension: {
+        type: 'auth',
+        suggestedActions: {
+          actions: [{
+            type: 'openUrl',
+            value: `${domainName}/bot-auth-start`,
+            title: 'Log in to Quire'
+          }]
+        }
+      }
+    };
+    if (!userToken)
+      return loginAction;
+
     try {
       return await this.handleSubmit(context, data, userToken);
     } catch (error) {
@@ -608,18 +643,7 @@ class BotActivityHandler extends TeamsActivityHandler {
 
       const token = await QuireApi.refreshAndStoreToken(teamsId, userToken);
       if (token.isInvalidToken)
-       return {
-        composeExtension: {
-          type: 'auth',
-          suggestedActions: {
-            actions: [{
-              type: 'openUrl',
-              value: `${domainName}/bot-auth-start`,
-              title: 'Log in to Quire'
-            }]
-          }
-        }
-      };
+        return loginAction;
 
       action.token = token;
       return await this.handleTeamsMessagingExtensionSubmitAction(context, action);

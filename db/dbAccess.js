@@ -134,7 +134,7 @@ function addToTeamList(teamId) {
   });
 }
 
-function isInTeamList(teamId) {
+function isChannelMember(teamId) {
   return new Promise((resolve, reject) => {
     db.get(`SELECT * FROM teamList WHERE id = ?`, teamId, (err, row) => {
       if (row) {
@@ -165,7 +165,7 @@ module.exports = {
   deleteLinkedProject: deleteLinkedProject,
   initDB: initDB,
   addToTeamList: addToTeamList,
-  isInTeamList: isInTeamList,
+  isChannelMember: isChannelMember,
   removeFromTeamList: removeFromTeamList,
   shutdown: shutdown
 }
