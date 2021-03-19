@@ -222,8 +222,16 @@ function authHeader(token) {
 }
 
 function handleError(error) {
-  if (error.response && error.response.status === 403)
+  if (!error.response) {
+    error.connectionError = true;
+    throw error;
+  }
+
+  const status = error.response.status;
+  if (status == 403)
     error.hasNoPermission = true;
+  else if (status == 404)
+    error.notFound = true;
   else
     error.connectionError = true;
 

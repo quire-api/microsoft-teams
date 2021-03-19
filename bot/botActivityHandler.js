@@ -173,6 +173,8 @@ class BotActivityHandler extends TeamsActivityHandler {
         await context.sendActivity('You do not have permission to perform this action. Please contact your Admin.');
       } else if (error.connectionError) {
         await context.sendActivity('Sorry, Quire is temporary unavailable. We will be back shortly.');
+      } else if (error.notFound) {
+        await context.sendActivity(`Task ${cardData.nameText} not found. Please check again in Quire.`);
       } else {
         throw error;
       }
@@ -222,8 +224,9 @@ class BotActivityHandler extends TeamsActivityHandler {
           message = 'You do not have permission to perform this action. Please contact your Admin.';
         } else if (error.connectionError) {
           message = 'Sorry, Quire is temporary unavailable. We will be back shortly.';
+        } else if (error.notFound) {
+          message = `Task ${taskModuleRequest.data.taskName} not found. Please check again in Quire.`;
         }
-
         return createTaskInfo('Error', CardTemplates.simpleMessageCard(message));
       }
     }
@@ -382,6 +385,8 @@ class BotActivityHandler extends TeamsActivityHandler {
           message = 'You do not have permission to perform this action. Please contact your Admin.';
         } else if (error.connectionError) {
           message = 'Sorry, Quire is temporary unavailable. We will be back shortly.';
+        } else if (error.notFound) {
+          message = `Task ${taskModuleRequest.data.taskName} not found. Please check again in Quire.`;
         }
 
         return createTaskInfo('Error', CardTemplates.simpleMessageCard(message));
@@ -438,7 +443,7 @@ class BotActivityHandler extends TeamsActivityHandler {
         break;
       case 'addComment_submit': {
         if (data.comment_input.length == 0) {
-          const messageCard = CardTemplates.simpleMessageCard('Please input comment!');
+          const messageCard = CardTemplates.simpleMessageCard('Task comment cannot be empty.');
           return createTaskInfo('Add Comment', messageCard);
         }
         const task = await QuireApi.addCommentToTaskByOid(userToken, data.comment_input, data.taskOid);
