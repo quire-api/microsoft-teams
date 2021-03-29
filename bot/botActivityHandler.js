@@ -65,9 +65,13 @@ class BotActivityHandler extends TeamsActivityHandler {
               await context.sendActivity(MessageFactory.attachment(signoutCard));
             });
           } else {
-            await dbAccess.deleteToken(context.activity.from.id);
-            const logoutMessageCard = CardTemplates.logoutMessageCard();
-            await context.sendActivity(MessageFactory.attachment(logoutMessageCard));
+            if (isLogin) {
+              await dbAccess.deleteToken(context.activity.from.id);
+              const logoutMessageCard = CardTemplates.logoutMessageCard();
+              await context.sendActivity(MessageFactory.attachment(logoutMessageCard));
+            } else {
+              await context.sendActivity(MessageFactory.text('You are already logged out. You can always login again. See you later!'));
+            }
           }
           break;
         }
