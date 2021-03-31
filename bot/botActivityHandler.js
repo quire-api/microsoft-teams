@@ -180,7 +180,7 @@ class BotActivityHandler extends TeamsActivityHandler {
           const conversationId = utils.getConversationId(context.activity);
           const serviceUrl = context.activity.serviceUrl;
           await QuireApi.addFollowerToTask(userToken, cardData.taskOid, conversationId, serviceUrl);
-          await context.sendActivity(`${context.activity.from.name} has got this channel to follow ${cardData.taskName}`);
+          await context.sendActivity(`You have got this channel to follow ${cardData.taskName}`);
           break;
         }
         default:
@@ -546,7 +546,7 @@ class BotActivityHandler extends TeamsActivityHandler {
         }
 
         dbAccess.addToFollowedProjectList(project.oid, conversationId, project.nameText);
-        const message = `${context.activity.from.name} has got this channel to follow ${project.nameText}`;
+        const message = `You have got this channel to follow ${project.nameText}`;
         if (context.activity.conversation.conversationType === 'personal') {
           await context.sendActivity(message);
           break;
@@ -575,7 +575,7 @@ class BotActivityHandler extends TeamsActivityHandler {
           return createTaskInfo('Unfollow Task', messageCard);
         }
         dbAccess.removeFromFollowedProjectList(project.oid, conversationId);
-        await context.sendActivity(`${context.activity.from.name} has got this channel to unfollow ${project.nameText}`);
+        await context.sendActivity(`You have got this channel to unfollow ${project.nameText}`);
         break;
       }
       case 'redirectToSignin_submit':
