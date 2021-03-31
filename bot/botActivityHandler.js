@@ -334,6 +334,7 @@ class BotActivityHandler extends TeamsActivityHandler {
       }
       case 'followProject_fetch': {
         const allProjects = await QuireApi.getAllProjects(userToken);
+        allProjects.shift(); // remove my task
         const followProjectCard = CardTemplates.followProjectCard(allProjects);
         return createTaskInfo('Follow Project', followProjectCard);
       }
@@ -522,6 +523,9 @@ class BotActivityHandler extends TeamsActivityHandler {
         break;
       }
       case 'linkProject_submit': {
+        if (!data.linkProject_input)
+          return createTaskInfo('Link Project', CardTemplates.simpleMessageCard('Project name cannot be empty'));
+
         const id = utils.getConversationId(context.activity);
         const project = JSON.parse(data.linkProject_input);
         dbAccess.putLinkedProject(id, project);
@@ -536,7 +540,8 @@ class BotActivityHandler extends TeamsActivityHandler {
       case 'followProject_submit': {
         const conversationId = utils.getConversationId(context.activity);
         const serviceUrl = context.activity.serviceUrl;
-        if (!data.followProject_input) break;
+        if (!data.followProject_input)
+          return createTaskInfo('Follow Project', CardTemplates.simpleMessageCard('Project name cannot be empty'));
 
         const project = JSON.parse(data.followProject_input);
         const respond = await QuireApi.addFollowerToProject(userToken, project.oid, conversationId, serviceUrl);
@@ -566,6 +571,9 @@ class BotActivityHandler extends TeamsActivityHandler {
         break;
       }
       case 'unfollowProject_submit': {
+        if (!data.unfollowProject_input)
+          return createTaskInfo('Unfollow Project', CardTemplates.simpleMessageCard('Project name cannot be empty'));
+
         const project = JSON.parse(data.unfollowProject_input);
         const conversationId = utils.getConversationId(context.activity);
         const serviceUrl = context.activity.serviceUrl;
