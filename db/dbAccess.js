@@ -115,6 +115,13 @@ function initDB() {
         id TEXT PRIMARY KEY NOT NULL,
         lastAccessTime INTEGER NOT NULL
       )`);
+
+      db.run(`CREATE TABLE IF NOT EXISTS followedProject (
+        projectOid TEXT NOT NULL,
+        conversationId TEXT NOT NULL,
+        projectName TEXT NOT NULL,
+        PRIMARY KEY(projectOid, conversationId)
+      )`);
     });
 }
 
@@ -152,6 +159,36 @@ function removeFromTeamList(teamId) {
   db.run(`DELETE FROM teamList WHERE id = ?`, teamId);
 }
 
+function addToFollowedProjectList(projectOid, conversationId, projectName) {
+  const param = {
+    $projectOid: projectOid,
+    $conversationId: conversationId,
+    $projectName: projectName
+  };
+  db.run(`INSERT INTO followedProject VALUES ($projectOid, $conversationId, $projectName)`,
+      param, (e) => {
+    if (e) {
+      console.log(e);
+      console.log(param);
+    }
+  });
+}
+
+function getFollowedProjectList(conversationId) {
+  return new Promise((resolve, reject) => {
+    db.all(`SELECT * FROM followedProject WHERE conversationId = ?`, conversationId, (err, rows) => {
+      resolve(rows);
+    });
+  });
+}
+
+function removeFromFollowedProjectList(projectOid, conversationId) {
+  db.run(`DELETE FROM followedProject WHERE projectOid = $projectOid AND conversationId = $conversationId`, {
+    $projectOid: projectOid,
+    $conversationId: conversationId
+  });
+}
+
 function shutdown() {
   db.close();
 }
@@ -167,5 +204,8 @@ module.exports = {
   addToTeamList: addToTeamList,
   isChannelMember: isChannelMember,
   removeFromTeamList: removeFromTeamList,
+  addToFollowedProjectList: addToFollowedProjectList,
+  getFollowedProjectList: getFollowedProjectList,
+  removeFromFollowedProjectList: removeFromFollowedProjectList,
   shutdown: shutdown
 }

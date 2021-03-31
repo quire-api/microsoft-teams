@@ -131,6 +131,10 @@ class BotActivityHandler extends TeamsActivityHandler {
         await context.sendActivity(MessageFactory.attachment(
             CardTemplates.followProjectButton()));
         break;
+      case 'unfollow project':
+        await context.sendActivity(MessageFactory.attachment(
+            CardTemplates.unfollowProjectButton()));
+        break;
       default:
         if (context.activity.attachments) break; // ignore msg if with attachments
         await context.sendActivity(MessageFactory.attachment(
@@ -250,6 +254,9 @@ class BotActivityHandler extends TeamsActivityHandler {
     } else if (data.fetchId === 'followProject_fetch') {
       title = 'Follow Project';
       message = 'following a project';
+    } else if (data.fetchId === 'unfollowProject_fetch') {
+      title = 'Unfollow Project';
+      message = 'unfollow project';
     } else if (data.fetchId === 'followTask_submit') {
       title = 'Follow Task';
       message = 'following a task';
@@ -305,6 +312,15 @@ class BotActivityHandler extends TeamsActivityHandler {
         const allProjects = await QuireApi.getAllProjects(userToken);
         const followProjectCard = CardTemplates.followProjectCard(allProjects);
         return createTaskInfo('Follow Project', followProjectCard);
+      }
+      case 'unfollowProject_fetch': {
+        const conversationId = utils.getConversationId(context.activity);
+        const followedProjectList = await dbAccess.getFollowedProjectList(conversationId);
+        if (followedProjectList.length == 0) {
+          await context.sendActivity("You haven't got this channel to follow any project yet.");
+          break;
+        }
+        return createTaskInfo('Unfollow Project', CardTemplates.unfollowProjectCard(followedProjectList));
       }
       case 'taskComplete_submit': {
         const task = await QuireApi.getTaskByOid(userToken, data.taskOid);
@@ -374,6 +390,9 @@ class BotActivityHandler extends TeamsActivityHandler {
               break;
             case 'followTask_submit':
               message = 'following a task';
+              break;
+            case 'unfollowProject_submit':
+              message = 'unfollowing a project';
               break;
           }
           const needToLoginCard = CardTemplates.needToLoginCard(message);
@@ -495,6 +514,8 @@ class BotActivityHandler extends TeamsActivityHandler {
           const messageCard = CardTemplates.simpleMessageCard('You do not have permission to perform this action. Please contact your Admin.');
           return createTaskInfo('Follow Project', messageCard);
         }
+
+        dbAccess.addToFollowedProjectList(project.oid, conversationId, project.nameText);
         const message = `${context.activity.from.name} has got this channel to follow ${project.nameText}`;
         if (context.activity.conversation.conversationType === 'personal') {
           await context.sendActivity(message);
@@ -512,6 +533,19 @@ class BotActivityHandler extends TeamsActivityHandler {
           return createTaskInfo('Follow Task', messageCard);
         }
         await context.sendActivity(`You have successfully followed ${data.taskName}`);
+        break;
+      }
+      case 'unfollowProject_submit': {
+        const project = JSON.parse(data.unfollowProject_input);
+        const conversationId = utils.getConversationId(context.activity);
+        const serviceUrl = context.activity.serviceUrl;
+        const respond = await QuireApi.removeFollowerFromProject(userToken, project.oid, conversationId, serviceUrl);
+        if (respond.hasNoPermission) {
+          const messageCard = CardTemplates.simpleMessageCard('You do not have permission to perform this action. Please contact your Admin.');
+          return createTaskInfo('Unfollow Task', messageCard);
+        }
+        dbAccess.removeFromFollowedProjectList(project.oid, conversationId);
+        await context.sendActivity(`${context.activity.from.name} has got this channel to unfollow ${project.nameText}`);
         break;
       }
       case 'unlinkProject_submit': {

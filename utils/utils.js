@@ -101,6 +101,23 @@ function projectsToChoices(array) {
   });
 }
 
+function followedProjectListToChoices(array) {
+  return array.sort((curr, next) => {
+    if (curr.nameText > next.nameText) return 1;
+    if (curr.nameText < next.nameText) return -1;
+    return 0;
+  }).map(elem => {
+    return {
+      title: elem.projectName,
+      // value: elem.projectOid
+      value: JSON.stringify({
+        oid: elem.projectOid,
+        nameText: elem.projectName
+      })
+    }
+  });
+}
+
 module.exports = {
   addExpirationTimeForToken: addExpirationTimeForToken,
   getUserTokenByVerificationCode: getUserTokenByVerificationCode,
@@ -109,5 +126,6 @@ module.exports = {
   isUserLogin: isUserLogin,
   prepareVerificationCode: prepareVerificationCode,
   itemsToChoices: itemsToChoices,
-  projectsToChoices: projectsToChoices
+  projectsToChoices: projectsToChoices,
+  followedProjectListToChoices: followedProjectListToChoices
 }

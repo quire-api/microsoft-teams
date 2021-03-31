@@ -557,6 +557,61 @@ class CardTemplates {
     });
   }
 
+  static unfollowProjectButton() {
+    return CardFactory.adaptiveCard({
+      type: 'AdaptiveCard',
+      $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
+      version: '1.2',
+      body: [
+        {
+          type: 'TextBlock',
+          text: 'Click the below button to unfollow a Quire project.',
+          wrap: true
+        }
+      ],
+      actions: [
+        {
+          type: 'Action.Submit',
+          title: 'Unfollow project',
+          data: {
+            fetchId: 'unfollowProject_fetch',
+            msteams: {
+              type: 'task/fetch'
+            }
+          }
+        }
+      ]
+    });
+  }
+
+  static unfollowProjectCard(followedProjectList) {
+    return CardFactory.adaptiveCard({
+      type: 'AdaptiveCard',
+      schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
+      version: '1.2',
+      body: [
+        {
+          type: 'TextBlock',
+          text: 'Please select a project to unfollow',
+          wrap: true
+        },
+        {
+          type: 'Input.ChoiceSet',
+          id: 'unfollowProject_input',
+          choices: utils.followedProjectListToChoices(followedProjectList),
+          placeholder: 'Select a project'
+        }
+      ],
+      actions: [
+        {
+          type: 'Action.Submit',
+          title: 'Unfollow checked projects',
+          data: { actionId: 'unfollowProject_submit' }
+        }
+      ]
+    });
+  }
+
   static signoutCard() {
     return CardFactory.adaptiveCard({
       type: 'AdaptiveCard',
