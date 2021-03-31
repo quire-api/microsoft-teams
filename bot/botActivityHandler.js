@@ -127,6 +127,17 @@ class BotActivityHandler extends TeamsActivityHandler {
         await context.sendActivity(MessageFactory.attachment(
             CardTemplates.linkProjectButton()));
         break;
+      case 'unlink project':
+        const conversationId = utils.getConversationId(context.activity);
+        const linkedProject = await dbAccess.getLinkedProject(conversationId);
+        if (!linkedProject) {
+          await context.sendActivity(`You haven't linked any project to this channel yet.`);
+          break;
+        }
+
+        dbAccess.removeLinkedProject(conversationId);
+        await context.sendActivity(`You have unlinked ${linkedProject.nameText} from this channel`);
+        break;
       case 'follow project':
         await context.sendActivity(MessageFactory.attachment(
             CardTemplates.followProjectButton()));
@@ -308,16 +319,35 @@ class BotActivityHandler extends TeamsActivityHandler {
         const linkProjectCard = CardTemplates.linkProjectCard(linkedProject, allProjects);
         return createTaskInfo('Link Project', linkProjectCard);
       }
+      case 'unlinkProject_fetch': {
+        const conversationId = utils.getConversationId(context.activity);
+        const linkedProject = await dbAccess.getLinkedProject(conversationId);
+        let message;
+        if (linkedProject) {
+          await dbAccess.removeLinkedProject(conversationId);
+          message = `You have unlinked ${linkedProject.nameText} from this channel.`;
+        } else {
+          message = "You haven't linked any project to this channel yet.";
+        }
+
+        return createTaskInfo('Unlink Project', CardTemplates.simpleMessageCard(message));
+      }
       case 'followProject_fetch': {
         const allProjects = await QuireApi.getAllProjects(userToken);
         const followProjectCard = CardTemplates.followProjectCard(allProjects);
         return createTaskInfo('Follow Project', followProjectCard);
       }
       case 'unfollowProject_fetch': {
+        const isInvokedByMessageExtension = data.type !== 'task/fetch';
         const conversationId = utils.getConversationId(context.activity);
         const followedProjectList = await dbAccess.getFollowedProjectList(conversationId);
         if (followedProjectList.length == 0) {
-          await context.sendActivity("You haven't got this channel to follow any project yet.");
+          const message = "You haven't got this channel to follow any project yet."
+          if (isInvokedByMessageExtension) {
+            return createTaskInfo('Unfollow Project', CardTemplates.simpleMessageCard(message));
+          } else {
+            await context.sendActivity(message);
+          }
           break;
         }
         return createTaskInfo('Unfollow Project', CardTemplates.unfollowProjectCard(followedProjectList));
@@ -546,12 +576,6 @@ class BotActivityHandler extends TeamsActivityHandler {
         }
         dbAccess.removeFromFollowedProjectList(project.oid, conversationId);
         await context.sendActivity(`${context.activity.from.name} has got this channel to unfollow ${project.nameText}`);
-        break;
-      }
-      case 'unlinkProject_submit': {
-        const conversationId = utils.getConversationId(context.activity);
-        dbAccess.deleteLinkedProject(conversationId);
-        await context.sendActivity('This channel is unlink now');
         break;
       }
       case 'redirectToSignin_submit':

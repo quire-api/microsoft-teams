@@ -91,7 +91,7 @@ function getLinkedProject(id) {
   });
 }
 
-function deleteLinkedProject(id) {
+function removeLinkedProject(id) {
   db.run(`DELETE FROM linkedProject WHERE id = ?`, id);
 }
 
@@ -199,7 +199,7 @@ module.exports = {
   deleteToken: deleteToken,
   putLinkedProject: putLinkedProject,
   getLinkedProject: getLinkedProject,
-  deleteLinkedProject: deleteLinkedProject,
+  removeLinkedProject: removeLinkedProject,
   initDB: initDB,
   addToTeamList: addToTeamList,
   isChannelMember: isChannelMember,
