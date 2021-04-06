@@ -600,7 +600,7 @@ class CardTemplates {
       actions: [
         {
           type: 'Action.Submit',
-          title: 'Unfollow this project',
+          title: 'Unfollow project',
           data: { actionId: 'unfollowProject_submit' }
         }
       ]
