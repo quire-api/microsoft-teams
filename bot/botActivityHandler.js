@@ -731,7 +731,7 @@ class BotActivityHandler extends TeamsActivityHandler {
     const teamsId = context.activity.from.id;
     let token;
     // handle login
-    if (query.state) {
+    if (query.state && query.parameters[0].name !== 'searchQuery') {
       const verificationCode = query.state;
       token = await utils.getUserTokenByVerificationCode(verificationCode);
       utils.addExpirationTimeForToken(token);
