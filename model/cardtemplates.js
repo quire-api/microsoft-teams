@@ -829,16 +829,8 @@ class CardTemplates {
               value: 'Link a project to this channel'
             },
             {
-              title: 'Follow project',
-              value: 'Follow a project'
-            },
-            {
               title: 'Unlink project',
               value: 'Unlink a project from this channel'
-            },
-            {
-              title: 'Unfollow project',
-              value: 'Get this channel to unfollow a project'
             },
             {
               title: 'Login',
