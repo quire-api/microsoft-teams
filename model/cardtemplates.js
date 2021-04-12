@@ -29,6 +29,11 @@ class CardTemplates {
               value: `${process.env.DomainName}/bot-auth-start`
             }
           }
+        },
+        {
+          type: 'Action.OpenUrl',
+          title: 'Sign up',
+          url: 'https://quire.io/signup?continue=https://teams.microsoft.com'
         }
       ]
     });
