@@ -138,6 +138,14 @@ class BotActivityHandler extends TeamsActivityHandler {
         dbAccess.removeLinkedProject(conversationId);
         await context.sendActivity(`You have unlinked ${linkedProject.nameText} from this channel.`);
         break;
+      case 'follow project':
+        await context.sendActivity(MessageFactory.attachment(
+            CardTemplates.followProjectButton()));
+        break;
+      case 'unfollow project':
+        await context.sendActivity(MessageFactory.attachment(
+            CardTemplates.unfollowProjectButton()));
+        break;
       default:
         if (context.activity.attachments) break; // ignore msg if with attachments
         await context.sendActivity(MessageFactory.attachment(
