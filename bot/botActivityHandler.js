@@ -26,6 +26,8 @@ class BotActivityHandler extends TeamsActivityHandler {
       if (context.activity.value) {
         return await this.handleTeamsTaskModuleSubmit(context, {data: context.activity.value});
       }
+      const conversationType = context.activity.conversation.conversationType;
+      if (conversationType !== 'personal') return;
 
       switch (command) {
         case 'help':
