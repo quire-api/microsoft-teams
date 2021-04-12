@@ -288,10 +288,6 @@ class BotActivityHandler extends TeamsActivityHandler {
   }
 
   async fetchHandler(context, data, userToken) {
-    const conversationType = context.activity.conversation.conversationType;    
-    if ((conversationType === 'groupChat' || conversationType === 'channel') && !await dbAccess.isChannelMember(utils.getConversationId(context.activity))) {
-      return createTaskInfo('Error', CardTemplates.pleaseAddBotToChannelCard(conversationType));
-    }
 
     switch (data.fetchId) {
       case 'addTask_fetch': {
