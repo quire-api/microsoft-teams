@@ -328,6 +328,9 @@ class BotActivityHandler extends TeamsActivityHandler {
           message = "You haven't linked any project to this channel yet.";
         }
 
+        if (context.activity.conversation.conversationType == 'personal') {
+          await context.sendActivity(MessageFactory.text(message));
+        }
         return createTaskInfo('Unlink Project', CardTemplates.simpleMessageCard(message));
       }
       case 'followProject_fetch': {
@@ -526,8 +529,14 @@ class BotActivityHandler extends TeamsActivityHandler {
 
         const id = utils.getConversationId(context.activity);
         const project = JSON.parse(data.linkProject_input);
+        const oldProject = await dbAccess.getLinkedProject(id);
+        let message;
+        if (oldProject) {
+          message = `You have successfully linked ${project.nameText} and unlinked ${oldProject.nameText} to this channel.`;
+        } else {
+          message = `You have successfully linked ${project.nameText} to this channel.`;
+        }
         dbAccess.putLinkedProject(id, project);
-        const message = `You have successfully linked ${project.nameText} to this channel.`;
         if (context.activity.conversation.conversationType === 'personal') {
           await context.sendActivity(message);
           break;
