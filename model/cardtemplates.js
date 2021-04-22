@@ -15,7 +15,7 @@ class CardTemplates {
       body: [
         {
           type: 'TextBlock',
-          text: 'Hi there👋  I\'m Quire Bot and I\'m here at your service!\n\nI am here to make your work much easier and faster! You can get real-time updates from your projects in Quire and manage your task list right from here at Teams!\n\n**Here are a couple things that I can do:**\n\n- Get notified of updates made to tasks and projects.\n- Add new tasks to Quire projects.\n- Assign tasks to team members, set dates and more.\n\nTo get you started, let\'s log in your Quire workspace.',
+          text: 'Hi there👋  I\'m Quire Bot and I\'m here at your service!\n\nI am here to make your work much easier and faster! You can get real-time updates from your projects in Quire and manage your task list right from here at Teams!\n\n**Here are a couple things that I can do:**\n\n- Add new tasks to Quire projects.\n- Assign tasks to team members, set dates and more.\n\nTo get you started, let\'s log in your Quire workspace.',
           wrap: true
         }
       ],
