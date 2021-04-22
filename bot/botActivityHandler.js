@@ -531,10 +531,14 @@ class BotActivityHandler extends TeamsActivityHandler {
         const project = JSON.parse(data.linkProject_input);
         const oldProject = await dbAccess.getLinkedProject(id);
         let message;
-        if (oldProject) {
+        // console.log(`oldprojectid ${oldProject.id}`);
+        // console.log(`projectid ${project.id}`);
+        if (!oldProject) {
+          message = `You have successfully linked ${project.nameText} to this channel.`;
+        } else if (oldProject.id != id) {
           message = `You have successfully linked ${project.nameText} and unlinked ${oldProject.nameText} to this channel.`;
         } else {
-          message = `You have successfully linked ${project.nameText} to this channel.`;
+          message = `You have already linked ${project.nameText} to this channel.`;
         }
         dbAccess.putLinkedProject(id, project);
         if (context.activity.conversation.conversationType === 'personal') {
