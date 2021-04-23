@@ -540,8 +540,13 @@ class BotActivityHandler extends TeamsActivityHandler {
         }
         dbAccess.putLinkedProject(id, project);
         if (context.activity.conversation.conversationType === 'personal') {
-          await context.sendActivity(message);
-          break;
+          try {
+            await context.sendActivity(message);
+            break;
+          } catch (_) {
+            // if reach here, means the bot is not part of the conversation roster.
+            // just ignore the error and fall through
+          }
         }
         const messageCard = CardTemplates.simpleMessageCard(message);
         return createTaskInfo('Link Project', messageCard);
