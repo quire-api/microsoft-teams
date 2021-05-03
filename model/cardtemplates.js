@@ -33,7 +33,7 @@ class CardTemplates {
         {
           type: 'Action.OpenUrl',
           title: 'Sign up',
-          url: 'https://quire.io/signup?continue=https://teams.microsoft.com'
+          url: 'https://quire.io/signup?continue=https://quire.io/r/integra/microsoft-teams/signup/confirm'
         }
       ]
     });
