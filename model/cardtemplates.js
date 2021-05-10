@@ -370,8 +370,7 @@ class CardTemplates {
             fetchId: 'followTask_submit',
             taskOid: task.oid,
             taskName: task.nameText,
-            msteams: conversationType === 'personal' ?
-                null : { type: 'task/fetch' }
+            msteams: { type: 'task/fetch' }
           }
     });
     return CardFactory.adaptiveCard(taskCard);

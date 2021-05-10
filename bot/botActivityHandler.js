@@ -328,9 +328,11 @@ class BotActivityHandler extends TeamsActivityHandler {
           message = "You haven't linked any project to this channel yet.";
         }
 
-        if (context.activity.conversation.conversationType == 'personal') {
-          await context.sendActivity(MessageFactory.text(message));
-        }
+        try {
+          if (context.activity.conversation.conversationType === 'personal')
+            await context.sendActivity(MessageFactory.text(message));
+        } catch (_) { /* ignore and fall through */ }
+
         return createTaskInfo('Unlink Project', CardTemplates.simpleMessageCard(message));
       }
       case 'followProject_fetch': {
@@ -370,13 +372,17 @@ class BotActivityHandler extends TeamsActivityHandler {
         const conversationId = utils.getConversationId(context.activity);
         const serviceUrl = context.activity.serviceUrl;
         const respond = await QuireApi.addFollowerToTask(userToken, data.taskOid, conversationId, serviceUrl);
+        let message;
         if (respond.hasNoPermission) {
-          const messageCard = CardTemplates.simpleMessageCard('You do not have permission to perform this action. Please contact your Admin.');
-          return createTaskInfo('Follow Task', messageCard);
+          message = 'You do not have permission to perform this action. Please contact your Admin.';
+        } else {
+          message = `You have successfully followed ${data.taskName}`;
         }
-        const messageCard = 
-            CardTemplates.simpleMessageCard(`You have successfully followed ${data.taskName}`);
-        return createTaskInfo('Follow Task', messageCard);
+        try {
+          await context.sendActivity(message);
+          break;
+        } catch (_) { /* ignore and fall through */ }
+        return createTaskInfo('Follow Task', CardTemplates.simpleMessageCard(message));
       }
       default:
         console.log(data);
@@ -543,10 +549,7 @@ class BotActivityHandler extends TeamsActivityHandler {
           try {
             await context.sendActivity(message);
             break;
-          } catch (_) {
-            // if reach here, means the bot is not part of the conversation roster.
-            // just ignore the error and fall through
-          }
+          } catch (_) { /* ignore and fall through */ }
         }
         const messageCard = CardTemplates.simpleMessageCard(message);
         return createTaskInfo('Link Project', messageCard);
