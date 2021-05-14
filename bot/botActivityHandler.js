@@ -480,7 +480,9 @@ class BotActivityHandler extends TeamsActivityHandler {
           const messageCard = CardTemplates.simpleMessageCard('Task name cannot be empty.');
           return createTaskInfo('Add Task', messageCard);
         }
-
+        if (!task.due) {   // if due is blank, mobile device will send empty string and cause Quire return 400
+          delete task.due; // so we just delete due if it is falsy
+        }
         if (data.assignee) {
           task.assignees = [JSON.parse(data.assignee).oid];
         }
