@@ -863,7 +863,7 @@ class CardTemplates {
         {
           type: 'Action.OpenUrl',
           title: 'Learn more',
-          url: 'https://quire.io/guide/microsoft-teams/'
+          url: 'https://quire.io/apps/microsoft-teams'
         }
       ]
     });
@@ -907,7 +907,7 @@ class CardTemplates {
           {
             type: 'Action.OpenUrl',
             title: 'Learn more',
-            url: 'https://quire.io/guide/microsoft-teams/'
+            url: 'https://quire.io/apps/microsoft-teams'
           }
         ]),
       this._tourCard(
@@ -926,7 +926,7 @@ class CardTemplates {
           {
             type: 'Action.OpenUrl',
             title: 'Learn more',
-            url: 'https://quire.io/guide/microsoft-teams/'
+            url: 'https://quire.io/apps/microsoft-teams'
           }
         ]),
       this._tourCard(
@@ -946,7 +946,7 @@ class CardTemplates {
           {
             type: 'Action.OpenUrl',
             title: 'Learn more',
-            url: 'https://quire.io/guide/microsoft-teams/'
+            url: 'https://quire.io/apps/microsoft-teams'
           }
         ]),
       this._tourCard(
@@ -969,7 +969,7 @@ class CardTemplates {
           {
             type: 'Action.OpenUrl',
             title: 'Learn more',
-            url: 'https://quire.io/guide/microsoft-teams/'
+            url: 'https://quire.io/apps/microsoft-teams'
           }
         ]),
     ];
