@@ -6,8 +6,9 @@
 ```
 npm update
 ```
-
-* Start server
+* Prepare `env` file in project folder
+  * It contains Open API id/secret
+## Start server
 ```
 node index.js
 ```
