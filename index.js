@@ -4,7 +4,7 @@
 
 const path = require('path');
 const express = require('express');
-const ENV_FILE = path.join(__dirname, '../boeneo/mis/configurations/config/msteams/env');
+const ENV_FILE = path.join(__dirname, './env');
 require('dotenv').config({ path: ENV_FILE });
 const { BotFrameworkAdapter, MessageFactory } = require('botbuilder');
 const { MicrosoftAppCredentials } = require('botframework-connector');
