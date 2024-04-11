@@ -15,7 +15,14 @@ class CardTemplates {
       body: [
         {
           type: 'TextBlock',
-          text: 'Hi there👋  I\'m Quire Bot and I\'m here at your service!\n\nI am here to make your work much easier and faster! You can get real-time updates from your projects in Quire and manage your task list right from here at Microsoft Teams!\n\n**Here are a couple things that I can do:**\n\n- Add new tasks to Quire projects.\n- Assign tasks to team members, set dates and more.\n\nTo get you started, let\'s log in your Quire workspace.',
+          text: 'Hi there👋  I\'m Quire Bot and I\'m here at your service!\n\n'
+            + 'I am here to make your work much easier and faster! '
+            + 'You can get real-time updates from your projects in Quire '
+            + 'and manage your task list right from here at Microsoft Teams!\n\n'
+            + '**Here are a couple things that I can do:**\n\n'
+            + '- Add new tasks to Quire projects.\n'
+            + '- Assign tasks to team members, set dates and more.\n\n'
+            + 'To get you started, let\'s log in your Quire workspace.',
           wrap: true
         }
       ],
@@ -746,7 +753,11 @@ class CardTemplates {
       body: [
         {
           type: 'TextBlock',
-          text: 'Sorry, I am not quite sure what you mean, but I\'m here to help! Please use the below help button to see what I can do for you.',
+          text: 'Hi, I can\'t understand what you mean. Here\'s what I can do:\n'
+          + '- Get notified of updates made to tasks and projects.\n'
+          + '- Add new tasks to Quire projects.\n'
+          + '- Assign tasks to team members, set dates and more.\n\n'
+          + 'Still can\'t find what you need? Let us know how we can help.',
           wrap: true
         }
       ],
@@ -760,6 +771,11 @@ class CardTemplates {
               value: 'Help'
             }
           }
+        },
+        {
+          type: 'Action.OpenUrl',
+          title: 'Learn more',
+          url: 'https://quire.io/apps/microsoft-teams'
         }
       ]
     });

@@ -148,8 +148,17 @@ class BotActivityHandler extends TeamsActivityHandler {
         await context.sendActivity(MessageFactory.attachment(
             CardTemplates.unfollowProjectButton()));
         break;
+      case 'thank':
+      case 'thank you':
+      case 'thanks':
+        await context.sendActivity(`You're welcome. I'm glad I can help!`);
+        break;
+      case 'hi':
+      case 'hello':
+      case 'halo':
+        await context.sendActivity(`Hi! How can I help you today?`);
+        break;
       default:
-        if (context.activity.attachments) break; // ignore msg if with attachments
         await context.sendActivity(MessageFactory.attachment(
           CardTemplates.unknownCommandCard()));
     }
