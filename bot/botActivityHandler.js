@@ -12,6 +12,7 @@ const { CardTemplates } = require('../model/cardtemplates');
 const { QuireApi } = require('../utils/quireApi');
 const dbAccess = require('../db/dbAccess');
 const utils = require('../utils/utils');
+const { logger } = require('../utils/logger');
 const { QuireMessages } = require('../utils/quireMessages');
 const domainName = process.env.DomainName;
 
@@ -195,7 +196,7 @@ class BotActivityHandler extends TeamsActivityHandler {
           break;
         }
         default:
-          console.log(actionId);
+          logger.info(actionId);
           await context.sendActivity('error: submit from message extension card not handled');
       }
     } catch (error) {
@@ -394,7 +395,7 @@ class BotActivityHandler extends TeamsActivityHandler {
         return createTaskInfo('Follow Task', CardTemplates.simpleMessageCard(message));
       }
       default:
-        console.log(data);
+        logger.info(data);
         await context.sendActivity('error: fetch not handled');
     }
   }
@@ -631,7 +632,7 @@ class BotActivityHandler extends TeamsActivityHandler {
           const linkProjectCard = CardTemplates.linkProjectCard(linkedProject, allProjects);
           return createTaskInfo('Link Project', linkProjectCard);
         }
-        console.log(data);
+        logger.info(data);
         await context.sendActivity('error: submit not handled');
     }
   }

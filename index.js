@@ -11,6 +11,7 @@ const { MicrosoftAppCredentials } = require('botframework-connector');
 const { BotActivityHandler } = require('./bot/botActivityHandler');
 const { CardTemplates } = require('./model/cardtemplates');
 const { QuireApi } = require('./utils/quireApi');
+const { logger } = require('./utils/logger');
 const quireNotificationHandler = require('./bot/quireNotificationHandler');
 const dbAccess = require('./db/dbAccess');
 
@@ -21,10 +22,10 @@ const adapter = new BotFrameworkAdapter({
 });
 
 adapter.onTurnError = async (context, error) => {
-  console.error(`\n [onTurnError] unhandled error: ${error}`);
+  logger.error(`\n [onTurnError] unhandled error: ${error}`);
 
   if (error.isAxiosError) {
-    console.log(error.config);
+    logger.info(error.config);
     const statusCode = error.response.status;
     if (statusCode === 429 || statusCode === 503) {
       await context.sendActivity('Service is unavailable, please try again later');
@@ -45,7 +46,7 @@ const app = express();
 const port = process.env.port || process.env.PORT || 3978;
 app.use(express.json());
 const server = app.listen(port, () =>
-  console.log(`\Bot/ME service listening at https://localhost:${port}`)
+  logger.info(`\Bot/ME service listening at https://localhost:${port}`)
 );
 
 // Listen for incoming requests.
@@ -74,10 +75,10 @@ app.post('/webhook*', async (req, res) => {
       res.sendStatus(200);
     } catch (error) {
       if (error.statusCode === 403) {
-        console.log(error.body);
+        logger.info(error.body);
         res.sendStatus(403);
       } else {
-        console.log(error.config);
+        logger.info(error.config);
         res.sendStatus(200);
       }
     }
@@ -95,5 +96,5 @@ app.get('/heartbeat', (req, res) => res.sendStatus(200));
 process.on('SIGINT', () => {
   dbAccess.shutdown();
   server.close();
-  console.log(`\nServer shutdown...`);
+  logger.info(`\nServer shutdown...`);
 });

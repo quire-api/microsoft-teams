@@ -4,6 +4,7 @@
 
 const sqlite3 = require('sqlite3');
 const db = new sqlite3.Database(process.env.DBPath);
+const { logger } = require('../utils/logger');
 
 const tokenDuration = 180 * 24 * 60 * 60 * 1000; // 6 months
 const clearInterval = 24 * 60 * 60 * 1000; // 24 hours
@@ -168,8 +169,8 @@ function addToFollowedProjectList(projectOid, conversationId, projectName) {
   db.run(`INSERT INTO followedProject VALUES ($projectOid, $conversationId, $projectName)`,
       param, (e) => {
     if (e) {
-      console.log(e);
-      console.log(param);
+      logger.info(e);
+      logger.info(param);
     }
   });
 }

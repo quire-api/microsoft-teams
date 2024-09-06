@@ -6,6 +6,7 @@ const axios = require('axios');
 const dbAccess = require('../db/dbAccess');
 const querystring = require('querystring');
 const utils = require('./utils');
+const { logger } = require('./logger');
 const clientId = process.env.QuireAppId;
 const clientSecret = process.env.QuireAppSecret;
 const domainName = process.env.DomainName;
@@ -211,7 +212,7 @@ class QuireApi {
       resBody += '</script></body></html>';
       res.send(resBody);
     } catch (e) {
-      console.log(e);
+      logger.info(e);
     }
   }
 }
