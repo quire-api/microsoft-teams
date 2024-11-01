@@ -2,7 +2,7 @@
 // History: 2020/12/22 5:55 PM
 // Author: charlie<charliehsieh@potix.com>
 
-const build = '1.1.0';
+const build = '1.1.1';
 const path = require('path');
 const express = require('express');
 const ENV_FILE = path.join(__dirname, './env');

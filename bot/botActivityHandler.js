@@ -22,7 +22,6 @@ class BotActivityHandler extends TeamsActivityHandler {
 
     this.onMessage(async (context, next) => {
       TurnContext.removeRecipientMention(context.activity);
-      logger.info(command);
       const command = new String(context.activity.text).trim().toLocaleLowerCase();
       const isLogin = await utils.isUserLogin(context.activity.from.id);
       if (context.activity.value) {
