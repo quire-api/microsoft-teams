@@ -32,6 +32,7 @@ class BotActivityHandler extends TeamsActivityHandler {
 
       switch (command) {
         case 'help':
+          logger.info(command);
           await context.sendActivity(MessageFactory.attachment(
                 CardTemplates.helpCard()));
           break;
