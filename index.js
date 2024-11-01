@@ -2,6 +2,7 @@
 // History: 2020/12/22 5:55 PM
 // Author: charlie<charliehsieh@potix.com>
 
+const build = '1.1.0';
 const path = require('path');
 const express = require('express');
 const ENV_FILE = path.join(__dirname, './env');
@@ -46,7 +47,7 @@ const app = express();
 const port = process.env.port || process.env.PORT || 3978;
 app.use(express.json());
 const server = app.listen(port, () =>
-  logger.info(`\Bot/ME service listening at https://localhost:${port}`)
+  logger.info(`\Bot/ME service version ${build} listening at https://localhost:${port}`)
 );
 
 // Listen for incoming requests.
