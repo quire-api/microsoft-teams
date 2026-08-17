@@ -171,9 +171,8 @@ class QuireApi {
     const encodedId = encodeURIComponent(clientId);
     const url = `${quireUrl}/oauth?client_id=${encodedId}&redirect_uri=${redirectUri}`;
     let resBody = '<html><head><title>Sign In</title></head><body>';
-    resBody += '<script src="https://statics.teams.cdn.office.net/sdk/v1.6.0/js/MicrosoftTeams.min.js" integrity="sha384-mhp2E+BLMiZLe7rDIzj19WjgXJeI32NkPvrvvZBrMi5IvWup/1NUfS5xuYN5S3VT" crossorigin="anonymous"></script>';
+    resBody += '<script src="https://res.cdn.office.net/teams-js/2.19.0/js/MicrosoftTeams.min.js" integrity="sha384-h+MoYshcGDPMLlXjHLt2dSgsgYyWQ+yHd4Ob13htDsu8trGPea8Vooa8+tLtRzU7" crossorigin="anonymous"></script>';
     resBody += '<script type="text/javascript">';
-    resBody += 'microsoftTeams.initialize();';
     resBody += `window.location.assign('${url}');`;
     resBody += '</script></body></html>';
     res.send(resBody);
@@ -183,10 +182,10 @@ class QuireApi {
     try {
       let resBody = '<html><head><title>Quire for Teams Authentication</title></head>';
       resBody += '<body>';
-      resBody += '<script src="https://statics.teams.cdn.office.net/sdk/v1.6.0/js/MicrosoftTeams.min.js" integrity="sha384-mhp2E+BLMiZLe7rDIzj19WjgXJeI32NkPvrvvZBrMi5IvWup/1NUfS5xuYN5S3VT" crossorigin="anonymous"></script>';
+      resBody += '<script src="https://res.cdn.office.net/teams-js/2.19.0/js/MicrosoftTeams.min.js" integrity="sha384-h+MoYshcGDPMLlXjHLt2dSgsgYyWQ+yHd4Ob13htDsu8trGPea8Vooa8+tLtRzU7" crossorigin="anonymous"></script>';
       resBody += '<script type="text/javascript">';
-      resBody += 'microsoftTeams.initialize();';
 
+      let notify;
       const code = req.query.code;
       const error = req.query.error_description;
       if (code) {
@@ -200,16 +199,21 @@ class QuireApi {
         if (postRes.status == 200) {
           const verificationCode = await utils.prepareVerificationCode(postRes.data);
           logger.info('[handleAuthEnd] token exchanged OK, verification code issued');
-          resBody += `microsoftTeams.authentication.notifySuccess('${verificationCode}');`;
+          notify = `microsoftTeams.authentication.notifySuccess('${verificationCode}');`;
         } else {
-          resBody += 'microsoftTeams.authentication.notifyFailure();';
+          notify = 'microsoftTeams.authentication.notifyFailure();';
         }
       } else {
         // If auth error
         //bot-auth-end?error=access_denied&error_description=The+user+denied+the+authorization+request.
-        resBody += `microsoftTeams.authentication.notifyFailure(${error ? `'${error}'`: ''});`;
+        notify = `microsoftTeams.authentication.notifyFailure(${error ? `'${error}'`: ''});`;
       }
 
+      resBody += 'microsoftTeams.app.initialize().then(function() {';
+      resBody += notify;
+      resBody += '}).catch(function(e) {';
+      resBody += 'document.body.innerText = "Unable to hand the login result back to Microsoft Teams: " + e;';
+      resBody += '});';
       resBody += '</script></body></html>';
       res.send(resBody);
     } catch (e) {
