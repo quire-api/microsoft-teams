@@ -2,7 +2,7 @@
 // History: 2020/12/22 5:55 PM
 // Author: charlie<charliehsieh@potix.com>
 
-const build = '1.1.1';
+const build = '1.1.2';
 const path = require('path');
 const express = require('express');
 const ENV_FILE = path.join(__dirname, './env');
@@ -23,11 +23,11 @@ const adapter = new BotFrameworkAdapter({
 });
 
 adapter.onTurnError = async (context, error) => {
-  logger.error(`\n [onTurnError] unhandled error: ${error}`);
+  logger.error(`\n [onTurnError] unhandled error: ${error.stack || error}`);
 
   if (error.isAxiosError) {
     logger.info(error.config);
-    const statusCode = error.response.status;
+    const statusCode = error.response ? error.response.status : null;
     if (statusCode === 429 || statusCode === 503) {
       await context.sendActivity('Service is unavailable, please try again later');
       return;
@@ -36,6 +36,13 @@ adapter.onTurnError = async (context, error) => {
   await context.sendActivity(
     MessageFactory.attachment(CardTemplates.unknownErrorCard()));
 };
+
+process.on('unhandledRejection', (reason) => {
+  logger.error(`unhandledRejection: ${(reason && reason.stack) || reason}`);
+});
+process.on('uncaughtException', (error) => {
+  logger.error(`uncaughtException: ${error.stack || error}`);
+});
 
 // Create bot handlers
 const botActivityHandler = new BotActivityHandler();

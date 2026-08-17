@@ -215,8 +215,8 @@ class BotActivityHandler extends TeamsActivityHandler {
   async handleTeamsSigninVerifyState(context, query) {
     const verificationCode = query.state;
     const token = await utils.getUserTokenByVerificationCode(verificationCode);
-    utils.addExpirationTimeForToken(token);
     if (token) {
+      utils.addExpirationTimeForToken(token);
       const teamsId = context.activity.from.id;
       dbAccess.putToken(teamsId, token);
       const loginSuccessCard = CardTemplates.loginSuccessCard();
@@ -711,8 +711,8 @@ class BotActivityHandler extends TeamsActivityHandler {
     if (action.state) {
       const verificationCode = action.state;
       token = await utils.getUserTokenByVerificationCode(verificationCode);
-      utils.addExpirationTimeForToken(token);
       if (token) { // if login success, put token to storage and continue search
+        utils.addExpirationTimeForToken(token);
         dbAccess.putToken(teamsId, token);
       } else {
         return {
@@ -763,8 +763,8 @@ class BotActivityHandler extends TeamsActivityHandler {
     if (query.state && query.parameters[0].name !== 'searchQuery') {
       const verificationCode = query.state;
       token = await utils.getUserTokenByVerificationCode(verificationCode);
-      utils.addExpirationTimeForToken(token);
       if (token) { // if login success, put token to storage and continue search
+        utils.addExpirationTimeForToken(token);
         dbAccess.putToken(teamsId, token);
       } else {
         return {

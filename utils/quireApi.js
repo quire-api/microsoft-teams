@@ -212,7 +212,10 @@ class QuireApi {
       resBody += '</script></body></html>';
       res.send(resBody);
     } catch (e) {
-      logger.info(e);
+      logger.error(`[handleAuthEnd] ${e.stack || e}`);
+      if (e.isAxiosError && e.response)
+        logger.error(`[handleAuthEnd] token endpoint responded ${e.response.status}: ${JSON.stringify(e.response.data)}`);
+      res.status(500).send('Authentication failed. Please try again.');
     }
   }
 }
