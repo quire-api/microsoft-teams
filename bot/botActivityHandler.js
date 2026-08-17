@@ -215,6 +215,7 @@ class BotActivityHandler extends TeamsActivityHandler {
   async handleTeamsSigninVerifyState(context, query) {
     const verificationCode = query.state;
     const token = await utils.getUserTokenByVerificationCode(verificationCode);
+    logger.info(`[signin/verifyState] received, token ${token ? 'found' : 'NOT found (code expired or unknown)'}`);
     if (token) {
       utils.addExpirationTimeForToken(token);
       const teamsId = context.activity.from.id;

@@ -199,6 +199,7 @@ class QuireApi {
 
         if (postRes.status == 200) {
           const verificationCode = await utils.prepareVerificationCode(postRes.data);
+          logger.info('[handleAuthEnd] token exchanged OK, verification code issued');
           resBody += `microsoftTeams.authentication.notifySuccess('${verificationCode}');`;
         } else {
           resBody += 'microsoftTeams.authentication.notifyFailure();';
