@@ -40,9 +40,11 @@ This is what Copilot's auto-projected declarative agent (`ProjectedDeclarativeAg
 This repo holds the bot runtime only. The manifest, icons, and release steps are in **[`quire-io/quire-mcp` → `microsoft-m365-package/`](https://github.com/quire-io/quire-mcp/tree/main/microsoft-m365-package)**, because the manifest now also declares the Quire MCP server as an `agentConnectors` entry and its companion tool-description file is generated from that repo's tool definitions.
 
 ## Setup
-* Update package
+Requires **Node 22** (the Dockerfile builds on `node:22-alpine`).
+
+* Install dependencies from the lockfile
 ```
-npm update
+npm ci
 ```
 * Prepare `env` file in project folder
   * It contains Open API id/secret
@@ -50,6 +52,10 @@ npm update
 ```
 node index.js
 ```
+
+> **Do not run `npm update`.** The README previously said to, and on 2026-08-17 that is what broke production: it ignores `package-lock.json` and pulled forward a transitive dependency (`@typespec/ts-http-runtime`) that requires Node 19+, while the image was still on Node 16. The container then crash-looped for hours, and because each restart wiped the in-memory OAuth verification codes, Teams sign-in failed persistently.
+>
+> `package-lock.json` is committed and the Docker build uses `npm ci --omit=dev` precisely so this cannot recur. Use `npm ci` locally too, so what you run matches what ships. If a dependency genuinely needs upgrading, do it deliberately — bump it, commit the lockfile change, and check the Node engine requirements of whatever comes with it.
 
 ## Deploying
 The service runs as the `msteams-msteams-1` container on the `quire-nodejs` EC2 host, from `quire/microsoft-teams` in ECR (`us-west-2`). Image tags are timestamps, e.g. `202608171220`.
@@ -59,3 +65,10 @@ Because tags are pinned, pushing a new image is not enough — the running conta
 ```
 docker exec $(docker ps -q --filter name=msteams) grep -c "<string from your commit>" /app/bot/botActivityHandler.js
 ```
+
+The tag itself comes from SSM parameter `/quire/production/msteams/image`, which **Jenkins updates automatically** on a successful build — every entry in its history is written by `user/Jenkins3-ECR`, so there is no manual step there. `scripts/updatemsteams.sh` on the host reads that parameter, pulls, and recreates the container.
+
+The failure mode to watch for is subtler: a commit landing *after* the last build simply never gets picked up, and the deploy looks entirely successful because it faithfully ships whatever the parameter points at. Bump `build` in `index.js` when you want a deploy to be identifiable from the logs.
+
+### Health endpoint
+`GET /heartbeat` returns 200 (blocked externally by nginx; reachable as `localhost:3978/heartbeat` on the host). Intended for a monit watchdog — see [`quire-platform-docs` → `mis/production/nodejs-watchdogs.md`](https://github.com/quire-io/quire-platform-docs/blob/main/mis/production/nodejs-watchdogs.md). Note that a liveness watchdog would not have caught the 2026-08-17 incident, since the container was restarting itself rather than hanging; flapping detection is the part that matters for this service.
