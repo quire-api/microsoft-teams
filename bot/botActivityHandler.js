@@ -222,6 +222,10 @@ class BotActivityHandler extends TeamsActivityHandler {
       dbAccess.putToken(teamsId, token);
       const loginSuccessCard = CardTemplates.loginSuccessCard();
       await context.sendActivity(MessageFactory.attachment(loginSuccessCard));
+    } else if (await dbAccess.getToken(context.activity.from.id)) {
+      // Teams may resend signin/verifyState; the one-time code was already
+      // consumed by the successful login, so stay quiet
+      logger.info('[signin/verifyState] duplicate invoke ignored; user already logged in');
     } else {
       await context.sendActivity('Authentication failed!!!');
     }
