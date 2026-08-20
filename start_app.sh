@@ -2,7 +2,7 @@
 get_ssm_parameter() {
     /usr/bin/aws ssm get-parameter --name "$1" --with-decryption \
     --query "Parameter.Value" --output text --no-cli-pager |
-    base64 -d | tee /app/env
+    base64 -d > /app/env
 }
 
 case "$SYSENV" in
