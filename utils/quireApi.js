@@ -189,19 +189,29 @@ class QuireApi {
       const code = req.query.code;
       const error = req.query.error_description;
       if (code) {
-         const postRes = await axios.post(tokenUrl, querystring.encode({
-          grant_type: 'authorization_code',
-          code: code,
-          client_id: clientId,
-          client_secret: clientSecret
-        }));
+        let postRes;
+        try {
+          postRes = await axios.post(tokenUrl, querystring.encode({
+            grant_type: 'authorization_code',
+            code: code,
+            client_id: clientId,
+            client_secret: clientSecret
+          }));
+        } catch (e) {
+          // Quire returns 400 invalid_grant when the one-time code was already
+          // consumed (page reload / duplicate request) or expired. Hand the
+          // failure back to Teams so the popup closes instead of hanging on a
+          // raw 500 page (zkoss/boeneo#25571).
+          if (!e.isAxiosError || !e.response || e.response.status !== 400)
+            throw e;
+          logger.error(`[handleAuthEnd] token endpoint responded 400: ${JSON.stringify(e.response.data)}`);
+          notify = `microsoftTeams.authentication.notifyFailure('Sign-in link expired or already used. Please try signing in again.');`;
+        }
 
-        if (postRes.status == 200) {
+        if (postRes) {
           const verificationCode = await utils.prepareVerificationCode(postRes.data);
           logger.info('[handleAuthEnd] token exchanged OK, verification code issued');
           notify = `microsoftTeams.authentication.notifySuccess('${verificationCode}');`;
-        } else {
-          notify = 'microsoftTeams.authentication.notifyFailure();';
         }
       } else {
         // If auth error
