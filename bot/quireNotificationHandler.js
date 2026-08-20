@@ -3,6 +3,8 @@
 // Author: charlie<charliehsieh@potix.com>
 
 const { MessageFactory } = require("botbuilder");
+const { htmlToTeamsMarkdown } = require("../utils/messageFormatter");
+const { logger } = require("../utils/logger");
 
 const notificationType = {
   AddTask: 0,
@@ -49,7 +51,10 @@ async function handleQuireNotification(context, data) {
     //   await context.sendActivity(MessageFactory.attachment(taskCard));
     //   break;
     default:
-      const msg = MessageFactory.text(data.message);
+      // capture the raw tag set Quire actually emits (boeneo#25590)
+      if (data.message && data.message.includes('<'))
+        logger.info(`[notification] type=${data.type} raw message: ${JSON.stringify(data.message)}`);
+      const msg = MessageFactory.text(htmlToTeamsMarkdown(data.message));
       await context.sendActivity(msg);
   }
 }

@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  },
   "dependencies": {
     "axios": "~1.7.7",
     "botbuilder": "~4.23.1",
