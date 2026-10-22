@@ -40,7 +40,7 @@ This is what Copilot's auto-projected declarative agent (`ProjectedDeclarativeAg
 This repo holds the bot runtime only. The manifest, icons, and release steps are in **[`quire-io/quire-mcp` → `microsoft-m365-package/`](https://github.com/quire-io/quire-mcp/tree/main/microsoft-m365-package)**, because the manifest now also declares the Quire MCP server as an `agentConnectors` entry and its companion tool-description file is generated from that repo's tool definitions.
 
 ## Setup
-Requires **Node 22** (the Dockerfile builds on `node:22-alpine`).
+Requires **Node 22**. The Dockerfile pins the patch version (`node:22.23.4-alpine`), so bump it on each Node security release.
 
 * Install dependencies from the lockfile
 ```
